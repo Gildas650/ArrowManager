@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">ArrowManager</string>
+    <string name="sensor_page__name">Capteur</string>
+    <string name="raw_data">Données</string>
+    <string name="count">Nombre de flèches :</string>
+    <string name="sensor_name">Nom du Capteur :</string>
+    <string name="last_timing">Dernier temps d\'exécution :</string>
+    <string name="power">Voltage batterie :</string>
+    <string name="settings">Paramètres</string>
+    <string name="bow_type">Type d\'arc :</string>
+    <string name="monthly_obj">Objectif mensuel : </string>
+    <string name="weekly_obj">Objectif hebdomadaire : </string>
+    <string name="daily_obj">Objectif par scéance : </string>
+    <string name="tol_timing">Tolerance temps de visée : </string>
+    <string name="history">Historique </string>
+    <string name="session_time">Durée de la session</string>
+    <string name="nb_arrows">Nombre de flèches tirées</string>
+    <string name="aiming_time">Analyse du temps de visée</string>
+    <string name="scoring">Feuille de score</string>
+    <string name="chrono">Chrono</string>
+    <string-array name="bows">
+        <item>Compound</item>
+        <item>Recurve</item>
+    </string-array>
+    <string name="session_page">Suivi de session</string>
+    <string name="round_page">Feuille de scores</string>
+    <string name="title_stat">Statistiques</string>
+    <string name="title_score">Scores</string>
+    <string name="title_impact">Impacts</string>
+    <string name="field_average">Moy : </string>
+    <string name="field_min">Min :</string>
+    <string name="field_max">Max :</string>
+    <string name="field_last">Der :</string>
+    <string name="value_sec">0.00</string>
+</resources>

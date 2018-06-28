@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context="fr.arrowm.arrowm.Activities.SensorData">
+
+
+    <Button
+        android:id="@+id/returnb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentStart="true"
+        android:elevation="0dp"
+        android:text="Retour"
+        android:textColor="@color/darkGrey" />
+
+
+    <TextView
+        android:id="@+id/textView8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/returnb"
+        android:layout_below="@+id/textView2"
+        android:layout_marginLeft="16dp"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:text="@string/sensor_name"
+        android:textColor="@color/darkGrey"
+        android:textSize="16sp"
+        android:textStyle="normal|bold" />
+
+    <EditText
+        android:id="@+id/SensorName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/textView8"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="16dp"
+        android:layout_toRightOf="@+id/textView8"
+        android:elevation="0dp"
+        android:ems="8"
+        android:inputType="text"
+        android:paddingBottom="5dp"
+        android:paddingLeft="15dp"
+        android:paddingTop="5dp"
+        android:text=""
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginBottom="5dp"
+        android:background="@color/colorAppBlue"
+        android:text="@string/sensor_page__name"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textView6"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView8"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="5dp"
+        android:background="@color/colorAppBlue"
+        android:text="@string/raw_data"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textView14"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/returnb"
+        android:layout_below="@+id/textView6"
+        android:layout_marginLeft="16dp"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:text="@string/count"
+        android:textColor="@color/darkGrey"
+        android:textSize="16sp"
+        android:textStyle="normal|bold" />
+
+    <TextView
+        android:id="@+id/arrow_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/textView14"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@id/textView14"
+        android:layout_marginRight="16dp"
+        android:layout_toRightOf="@+id/textView14"
+        android:paddingBottom="5dp"
+        android:paddingLeft="15dp"
+        android:paddingTop="5dp"
+        android:text="N/A"
+        android:textColor="@color/darkGrey"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/textView15"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/returnb"
+        android:layout_below="@+id/textView14"
+        android:layout_marginLeft="16dp"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:text="@string/last_timing"
+        android:textColor="@color/darkGrey"
+        android:textSize="16sp"
+        android:textStyle="normal|bold" />
+
+    <TextView
+        android:id="@+id/arrow_millis"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/textView15"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@id/textView15"
+        android:layout_marginRight="16dp"
+        android:layout_toRightOf="@+id/textView15"
+        android:paddingBottom="5dp"
+        android:paddingLeft="15dp"
+        android:paddingTop="5dp"
+        android:text="N/A"
+        android:textColor="@color/darkGrey"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/textView16"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/returnb"
+        android:layout_below="@+id/textView15"
+        android:layout_marginLeft="16dp"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:text="@string/power"
+        android:textColor="@color/darkGrey"
+        android:textSize="16sp"
+        android:textStyle="normal|bold" />
+
+    <TextView
+        android:id="@+id/arrow_power"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/textView16"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@id/textView16"
+        android:layout_marginRight="16dp"
+        android:layout_toRightOf="@+id/textView16"
+        android:paddingBottom="5dp"
+        android:paddingLeft="15dp"
+        android:paddingTop="5dp"
+        android:text="N/A"
+        android:textColor="@color/darkGrey"
+        android:textSize="16sp" />
+
+</RelativeLayout>
