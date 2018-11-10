@@ -23,11 +23,13 @@ import android.widget.Toast;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import fr.arrowm.arrowm.Business.Impact;
 import fr.arrowm.arrowm.Business.Score;
 import fr.arrowm.arrowm.Business.Session;
 import fr.arrowm.arrowm.Business.touchableImageView;
+import fr.arrowm.arrowm.Db.ArrowDataBase;
 import fr.arrowm.arrowm.R;
 
 public class RoundAct extends AppCompatActivity {
@@ -37,10 +39,8 @@ public class RoundAct extends AppCompatActivity {
     public final static String SPOT = "FITA Mono-Spot";
     public final static String STANDARD = "FITA";
     public static final String SENSOR = "sensor";
-    public static final String SENSOR_CONNECTED = "sensorConnected";
-    public static final String SENSOR_MSG = "sensorMsg";
-    public static final String SENSOR_COUNT = "sensorCount";
-    public static final String SENSOR_TIME = "sensorTime";
+    public static final String SENSOR_DATA = "sensorData";
+    public static final String DELIMITERS = ";";
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
@@ -56,6 +56,7 @@ public class RoundAct extends AppCompatActivity {
     private TextView s2;
     private TextView s3;
     private TextView total;
+    private TextView vol;
     private TextView moy;
     private TextView nb10;
     private TextView nb9;
@@ -76,33 +77,40 @@ public class RoundAct extends AppCompatActivity {
     private ArrayList<Score> scoreToUse;
     private Integer lastBLECount = -1;
     private Boolean useBLE = false;
+    private LocalBroadcastManager localBroadcastManager;
+    private ArrowDataBase db = new ArrowDataBase(this);
     private BroadcastReceiver sensorListener = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getIntExtra(SENSOR_CONNECTED, STATE_DISCONNECTED) == STATE_CONNECTED) {
+            ArrayList<String> msg = new ArrayList<>();
+            msg = splitMessage(intent.getStringExtra(SENSOR_DATA));
+            if (Integer.parseInt(msg.get(0)) == STATE_CONNECTED) {
                 session.setBLEState(STATE_CONNECTED);
                 useBLE = true;
-            } else if (intent.getIntExtra(SENSOR_CONNECTED, STATE_DISCONNECTED) == STATE_CONNECTING) {
+            } else if (Integer.parseInt(msg.get(0)) == STATE_CONNECTING) {
                 session.setBLEState(STATE_CONNECTING);
                 useBLE = true;
             } else {
                 session.setBLEState(STATE_DISCONNECTED);
             }
-            if (intent.getIntExtra(SENSOR_COUNT, -1) != -1) {
-                addCountfromBLE(intent.getIntExtra(SENSOR_COUNT, -1), lastBLECount);
+            if (Integer.parseInt(msg.get(1)) != -1) {
+                addCountfromBLE(Integer.parseInt(msg.get(1)), lastBLECount);
             }
             //Time
-            if (intent.getIntExtra(SENSOR_TIME, -1) != -1) {
-                Integer ti = intent.getIntExtra(SENSOR_TIME, -1);
-                session.addArrowTime(ti);
+            if (Integer.parseInt(msg.get(2)) != -1) {
+                session.addArrowTime(Integer.parseInt(msg.get(2)));
             }
-            if (!intent.getStringExtra(SENSOR_MSG).equals("")) {
-                Log.e("msg", intent.getStringExtra(SENSOR_MSG));
-                if (getResources().getIdentifier(intent.getStringExtra(SENSOR_MSG), "string", PACKAGE_NAME) != 0) {
-                    Toast.makeText(getApplicationContext(), getResources().getIdentifier(intent.getStringExtra(SENSOR_MSG), "string", PACKAGE_NAME), Toast.LENGTH_LONG).show();
+            if (!(msg.get(4).equals(" "))) {
+                Log.e("msg", msg.get(4));
+                if (getResources().getIdentifier(msg.get(4), "string", PACKAGE_NAME) != 0) {
+                    Toast.makeText(getApplicationContext(), getResources().getIdentifier(msg.get(4), "string", PACKAGE_NAME), Toast.LENGTH_LONG).show();
+                }
+                else{
+                    Toast.makeText(getApplicationContext(),msg.get(4), Toast.LENGTH_LONG).show();
                 }
             }
+            updateSession(session);
         }
     };
 
@@ -112,7 +120,9 @@ public class RoundAct extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_round);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        PACKAGE_NAME = getApplicationContext().getPackageName();
 
+        localBroadcastManager = LocalBroadcastManager.getInstance(this);
         initializeScreen();
 
         if (session.getBLEState() == STATE_DISCONNECTED) {
@@ -123,6 +133,7 @@ public class RoundAct extends AppCompatActivity {
 
         ret.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                localBroadcastManager.unregisterReceiver(sensorListener);
                 face.setAllowedToDraw(true);
                 Intent i = new Intent(RoundAct.this, SessionAct.class);
                 i.putExtra(SESSION, session);
@@ -175,7 +186,7 @@ public class RoundAct extends AppCompatActivity {
 
         face.setOnTouchListener(new View.OnTouchListener() {
                                     public boolean onTouch(View myView, MotionEvent event) {
-                                        if (session.getDbId() == -1) {
+                                        if (session.getEndOfSession() == null) {
                                             int action = event.getAction();
                                             if (action == MotionEvent.ACTION_DOWN) {
                                                 cancelA.setVisibility(View.INVISIBLE);
@@ -207,13 +218,19 @@ public class RoundAct extends AppCompatActivity {
 
         PACKAGE_NAME = getApplicationContext().getPackageName();
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(sensorListener,
+        localBroadcastManager.registerReceiver(sensorListener,
                 new IntentFilter(SENSOR));
     }
 
     @Override
     public void onBackPressed() {
-        face.setAllowedToDraw(true);
+        //
+        if (session.getEndOfSession() == null) {
+            face.setAllowedToDraw(true);
+            Intent i = new Intent(RoundAct.this, SessionAct.class);
+            i.putExtra(SESSION, session);
+            startActivityForResult(i, 0);
+        }
         finish();
     }
 
@@ -238,7 +255,7 @@ public class RoundAct extends AppCompatActivity {
         }
         manageRoundBar();
         manageView();
-        if (session.getDbId() != -1) {
+        if (session.getEndOfSession() != null) {
             face.setAllowedToDraw(false);
         }
 
@@ -322,6 +339,7 @@ public class RoundAct extends AppCompatActivity {
         DecimalFormat dg = new DecimalFormat("000");
         DecimalFormat dh = new DecimalFormat("00");
         total.setText(dg.format(sessionStat[0]));
+        vol.setText(dh.format(sessionStat[8]));
         s1.setText(dg.format(sessionStat[5]));
         s2.setText(dg.format(sessionStat[6]));
         s3.setText(dg.format(sessionStat[7]));
@@ -336,6 +354,7 @@ public class RoundAct extends AppCompatActivity {
             session.addArrow();
         }
         session.getRound().addArrowScore(s, imp);
+        updateSession(session);
         arrowsRemaining--;
 
     }
@@ -348,6 +367,7 @@ public class RoundAct extends AppCompatActivity {
         if (arrowsRemaining < (3 * (session.getRound().getEvent().getArrowsByShoot() * session.getRound().getEvent().getShoot())) - 1) {
             arrowsRemaining++;
         }
+        updateSession(session);
     }
 
     private void initializeScreen() {
@@ -356,7 +376,7 @@ public class RoundAct extends AppCompatActivity {
 
         ret = (Button) findViewById(R.id.returnc);
         cancelA = (ImageButton) findViewById(R.id.cancelA);
-        if (session.getDbId() != -1) {
+        if (session.getEndOfSession() != null) {
             ret.setVisibility(View.INVISIBLE);
             cancelA.setVisibility(View.INVISIBLE);
         }
@@ -371,6 +391,7 @@ public class RoundAct extends AppCompatActivity {
         s3 = (TextView) findViewById(R.id.s3);
         total = (TextView) findViewById(R.id.total);
         moy = (TextView) findViewById(R.id.moy);
+        vol = (TextView) findViewById(R.id.vol);
         nb10 = (TextView) findViewById(R.id.nb10);
         nb9 = (TextView) findViewById(R.id.nb9);
         nb8 = (TextView) findViewById(R.id.nb8);
@@ -434,5 +455,26 @@ public class RoundAct extends AppCompatActivity {
         }
     }
 
+    private ArrayList<String> splitMessage(String msg) {
+        StringTokenizer strTkn = new StringTokenizer(msg, DELIMITERS);
+        ArrayList<String> arrLis = new ArrayList<>(msg.length());
 
+        while (strTkn.hasMoreTokens())
+            arrLis.add(strTkn.nextToken());
+
+        return arrLis;
+    }
+
+    private void updateSession(Session s){
+        db.open();
+        if (s.getDbId() == -1){
+            db.insert(s);
+        }
+        else{
+            db.removeSession(s.getDbId());
+            db.insert(s);
+        }
+
+        db.close();
+    }
 }
