@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorBar">#ffffff</color>
+    <color name="colorAppBlue">#3295ff</color>
+    <color name="point">#5E5E5E</color>
+    <color name="pgreen">#45D147</color>
+    <color name="pyellow">#E7D25B</color>
+    <color name="pred">#AE2222</color>
+    <color name="darkGrey">#3f5e7f</color>
+    <color name="Grey">#dddddd</color>
+    <color name="compGreen">#4e6b5f</color>
+</resources>

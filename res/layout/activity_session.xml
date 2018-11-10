@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="0dp"
+    android:paddingLeft="0dp"
+    android:paddingRight="0dp"
+    android:paddingTop="0dp"
+    tools:context="fr.arrowm.arrowm.Activities.SessionAct">
+
+    <LinearLayout
+        android:id="@+id/linearheader"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:background="@color/Grey"
+        android:orientation="horizontal"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:paddingLeft="40dp"
+            android:paddingTop="3dp"
+            android:text="@string/session_page"
+            android:textAlignment="center"
+            android:textColor="@color/darkGrey"
+            android:textSize="16sp"
+            android:textStyle="normal|bold" />
+
+        <ImageView
+            android:id="@+id/lowblebat"
+            android:layout_width="20dp"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            app:srcCompat="@drawable/lowblebat" />
+
+        <ImageView
+            android:id="@+id/bluestate"
+            android:layout_width="20dp"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/ic_bluetoothoff" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/title1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/linearheader"
+        android:layout_marginBottom="2dp"
+        android:background="@color/colorAppBlue"
+        android:text="@string/session_time"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/linear1"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentStart="false"
+        android:layout_alignParentTop="false"
+        android:layout_below="@+id/title1"
+        android:layout_marginBottom="2dp"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/clock" />
+
+        <TextView
+            android:id="@+id/timer"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:layout_weight="1"
+            android:paddingRight="10dp"
+            android:text="HH:MM:SS"
+            android:textAlignment="textEnd"
+            android:textColor="@color/darkGrey"
+            android:textSize="40sp"
+            android:textStyle="normal|bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/title2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/linear1"
+        android:layout_marginBottom="2dp"
+        android:background="@color/colorAppBlue"
+        android:text="@string/nb_arrows"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/linear2"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentStart="false"
+        android:layout_alignParentTop="false"
+        android:layout_below="@+id/title2"
+        android:layout_marginBottom="2dp"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="0dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            app:srcCompat="@drawable/arrow_icon" />
+
+        <TextView
+            android:id="@+id/nbOfArrows"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:layout_weight="1"
+            android:paddingRight="10dp"
+            android:text="0"
+            android:textAlignment="textEnd"
+            android:textColor="@color/darkGrey"
+            android:textSize="40sp"
+            android:textStyle="normal|bold" />
+
+    </LinearLayout>
+
+
+
+    <LinearLayout
+        android:id="@+id/linear3"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/linear2"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:orientation="vertical">
+
+        <ProgressBar
+            android:id="@+id/progress"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="100"
+            android:progress="1"
+            android:progressTint="@color/colorAppBlue" />
+
+        <SeekBar
+            android:id="@+id/seekBar"
+            style="@style/Widget.AppCompat.SeekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="-16dip"
+            android:layout_marginRight="-16dip"
+            android:layout_weight="1"
+            android:elevation="1dp"
+            android:max="12"
+            android:progress="6"
+            android:progressTint="@color/colorAppBlue"
+            android:thumbTint="@color/colorAppBlue" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/title3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/linear3"
+        android:background="@color/colorAppBlue"
+        android:text="@string/aiming_time"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/linearAimingTime"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/title3"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textView11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/field_average"
+            android:textColor="@color/darkGrey"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:id="@+id/averageTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="start|center_vertical"
+            android:paddingLeft="2dp"
+            android:text="@string/value_sec"
+            android:textColor="@color/darkGrey" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/field_min"
+            android:textStyle="normal|bold"
+            android:textColor="@color/darkGrey" />
+
+        <TextView
+            android:id="@+id/minTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingLeft="2dp"
+            android:text="@string/value_sec"
+            android:textColor="@color/darkGrey" />
+
+        <TextView
+            android:id="@+id/textView15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/field_max"
+            android:textColor="@color/darkGrey"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:id="@+id/maxTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingLeft="2dp"
+            android:text="@string/value_sec"
+            android:textColor="@color/darkGrey" />
+
+        <TextView
+            android:id="@+id/textView16"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/field_last"
+            android:textColor="@color/darkGrey"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:id="@+id/lastTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingLeft="2dp"
+            android:text="@string/value_sec"
+            android:textColor="@color/darkGrey" />
+
+    </LinearLayout>
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/graph"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_below="@+id/linearAimingTime"
+        android:layout_marginBottom="2dp"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="2dp" />
+
+
+    <TextView
+        android:id="@+id/title4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/graph"
+        android:background="@color/colorAppBlue"
+        android:text="@string/chrono"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/linear4"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/title4"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:orientation="horizontal">
+
+
+        <ProgressBar
+            android:id="@+id/progressChrono"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="100"
+            android:maxHeight="50dp"
+            android:minHeight="50dp"
+            android:progress="0"
+            android:scaleY="7"
+            android:visibility="gone" />
+
+        <Spinner
+            android:id="@+id/chronoSelect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/bchrono"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@android:color/transparent"
+            android:paddingBottom="5dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:paddingTop="5dp"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/right" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_below="@+id/title4"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="66dp">
+
+        <TextView
+            android:id="@+id/time"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:layout_marginTop="25dp"
+            android:text=""
+            android:textSize="20sp"
+            android:textStyle="normal|bold"
+            android:visibility="invisible" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/title5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/linear4"
+        android:background="@color/colorAppBlue"
+        android:text="@string/scoring"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/title5"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:orientation="horizontal">
+
+        <Spinner
+            android:id="@+id/round"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/nRound"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@android:color/transparent"
+            android:paddingBottom="5dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:paddingTop="5dp"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/right" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/linearRet"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/Grey"
+        android:orientation="horizontal"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp">
+
+
+        <Switch
+            android:id="@+id/sureToClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical|start"
+            android:thumbTint="@color/colorAppBlue" />
+
+        <Button
+            android:id="@+id/closeSession"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:enabled="false"
+            android:text="Déverouiller pour terminer"
+            android:textColor="@color/darkGrey"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+
+</RelativeLayout>
