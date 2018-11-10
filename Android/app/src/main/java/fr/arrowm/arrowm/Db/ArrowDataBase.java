@@ -81,7 +81,9 @@ public class ArrowDataBase {
         ContentValues sessionValues = new ContentValues();
         sessionValues.put(NUMBER_OF_ARROWS, s.getNumberOfArrows());
         sessionValues.put(SESSION_START, df.format(s.getBeginOfSession()));
-        sessionValues.put(SESSION_END, df.format(s.getEndOfSession()));
+        if (s.getEndOfSession() != null) {
+            sessionValues.put(SESSION_END, df.format(s.getEndOfSession()));
+        }
         long id = bdd.insert(SESSION_TABLE_NAME, null, sessionValues);
 
         //Insert scores
@@ -150,6 +152,22 @@ public class ArrowDataBase {
         return sessions;
     }
 
+    //Select last session in DB (used for list of sessions)
+    public LinkedList<Session> selectLast() {
+        LinkedList<Session> sessions = new LinkedList<>();
+        Cursor cursor = bdd.rawQuery("SELECT MAX(" + ID + ") from " + SESSION_TABLE_NAME , null);
+        Session session;
+        if (cursor.getCount() > 0) {
+            for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                String[] tmp = {cursor.getInt(0) + ""};
+                session = selectSessionWithID(tmp);
+                sessions.add(0, session);
+            }
+        }
+        cursor.close();
+        return sessions;
+    }
+
     //Fect information for objective progress bar in Home Activity (index 0 : number of arrow in next week, index 1 : number of arrows in last month)
     public ArrayList<String> defineObjResult() {
         ArrayList<String> ret = new ArrayList<>();
@@ -181,7 +199,9 @@ public class ArrowDataBase {
         s.setDbId(sc.getInt(0));
         s.setNumberOfArrows(sc.getInt(1));
         s.setBeginOfSession(textToDate(sc.getString(2)));
-        s.setEndOfSession(textToDate(sc.getString(3)));
+        if (sc.getString(3) != null) {
+            s.setEndOfSession(textToDate(sc.getString(3)));
+        }
         if (rc != null) {
             if (rc.getCount() > 0) {
                 rc.moveToFirst();
@@ -219,7 +239,12 @@ public class ArrowDataBase {
     private Date textToDate(String transform) {
         Date ret = new Date();
         try {
-            ret = df.parse(transform);
+            if (transform != null) {
+                ret = df.parse(transform);
+            }
+            else{
+                ret = null;
+            }
         } catch (ParseException e) {
             e.printStackTrace();
         }

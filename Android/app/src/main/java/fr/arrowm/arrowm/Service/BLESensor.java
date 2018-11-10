@@ -29,11 +29,7 @@ public class BLESensor extends Service {
     public static final String PREFERENCES = "ArrowPrefs";
     public static final String SENSOR_NAME = "sensorName";
     public static final String SENSOR = "sensor";
-    public static final String SENSOR_COUNT = "sensorCount";
-    public static final String SENSOR_CONNECTED = "sensorConnected";
-    public static final String SENSOR_TIME = "sensorTime";
-    public static final String SENSOR_POWER = "sensorPower";
-    public static final String SENSOR_MSG = "sensorMsg";
+    public static final String SENSOR_DATA = "sensorData";
     public static final String DELIMITERS = ";";
     public static final String SerialPortUUID = "0000dfb1-0000-1000-8000-00805f9b34fb";
     public static final String CommandUUID = "0000dfb2-0000-1000-8000-00805f9b34fb";
@@ -79,7 +75,7 @@ public class BLESensor extends Service {
             System.out.println("BluetoothGattCallback----onConnectionStateChange" + newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 mConnectionState = STATE_CONNECTED;
-                sendCount(STATE_CONNECTED, -1, -1, -1.0F, "");
+                sendState(STATE_CONNECTED,"");
                 Log.i(TAG, "Connected to GATT server.");
                 // Attempts to discover services after successful connection.
                 if (mBluetoothGatt.discoverServices()) {
@@ -95,7 +91,9 @@ public class BLESensor extends Service {
                 mConnectionState = STATE_DISCONNECTED;
                 if (!stop) {
                     Log.e(TAG, "Disconnected from GATT server.");
-                    sendCount(STATE_CONNECTING, -1, -1, -1.0F, "error_reconnect_BLE");
+                    sendState(STATE_CONNECTING,"error_reconnect_BLE");
+                    disconnect();
+                    close();
                     Handler handler = new Handler(Looper.getMainLooper());
                     handler.postDelayed(new Runnable() {
                         @Override
@@ -136,21 +134,16 @@ public class BLESensor extends Service {
                     } else if (uuid.equals(SerialPortUUID)) {
                         mSerialPortCharacteristic = gattCharacteristic;
                         System.out.println("mSerialPortCharacteristic  " + mSerialPortCharacteristic.getUuid().toString());
-//                    updateConnectionState(R.string.comm_establish);
                     } else if (uuid.equals(CommandUUID)) {
                         mCommandCharacteristic = gattCharacteristic;
                         System.out.println("mSerialPortCharacteristic  " + mSerialPortCharacteristic.getUuid().toString());
-//                    updateConnectionState(R.string.comm_establish);
                     }
                 }
                 mGattCharacteristics.add(charas);
             }
 
             if (mModelNumberCharacteristic == null || mSerialPortCharacteristic == null || mCommandCharacteristic == null) {
-                sendCount(STATE_DISCONNECTED, -1, -1, -1.0F, "error_not_found_BLE");
-                //Toast.makeText(mainContext, "Please select DFRobot devices",Toast.LENGTH_SHORT).show();
-                //mConnectionState = connectionStateEnum.isToScan;
-                //onConectionStateChange(mConnectionState);
+                sendState(STATE_DISCONNECTED,"error_not_found_BLE");
             } else {
                 mSCharacteristic = mModelNumberCharacteristic;
                 setCharacteristicNotification(mSCharacteristic, true);
@@ -338,16 +331,14 @@ public class BLESensor extends Service {
             if (mBluetoothManager == null) {
                 mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
                 if (mBluetoothManager == null) {
-                    Log.e(TAG, "Unable to initialize BluetoothManager.");
-                    sendCount(STATE_DISCONNECTED, -1, -1, -1.0F, "error_init_BLE");
+                    sendState(STATE_DISCONNECTED,"error_init_BLE");
                     return false;
                 }
             }
 
             mBluetoothAdapter = mBluetoothManager.getAdapter();
             if (mBluetoothAdapter == null) {
-                Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
-                sendCount(STATE_DISCONNECTED, -1, -1, -1.0F, "error_init_BLE");
+                sendState(STATE_DISCONNECTED,"error_init_BLE");
                 return false;
             }
 
@@ -360,29 +351,14 @@ public class BLESensor extends Service {
 
         if (mBluetoothAdapter == null || address == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
-            sendCount(STATE_DISCONNECTED, -1, -1, -1.0F, "error_init_BLE");
+            sendState(STATE_DISCONNECTED,"error_init_BLE");
             return false;
         }
-
-        // Previously connected device.  Try to reconnect.
-//        if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
-//                && mBluetoothGatt != null) {
-//            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
-//            if (mBluetoothGatt.connect()) {
-//            	System.out.println("mBluetoothGatt connect");
-//                mConnectionState = STATE_CONNECTING;
-//                return true;
-//            } else {
-//            	System.out.println("mBluetoothGatt else connect");
-//                return false;
-//            }
-//        }
-
 
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
             Log.w(TAG, "Device not found.  Unable to connect.");
-            sendCount(STATE_DISCONNECTED, -1, -1, -1.0F, "error_not_found_BLE");
+            sendState(STATE_DISCONNECTED,"error_not_found_BLE");
             return false;
         }
         // We want to directly connect to the device, so we are setting the autoConnect
@@ -397,17 +373,6 @@ public class BLESensor extends Service {
         return true;
     }
 
-    /*private void broadcastUpdate(final String action,
-                                 final BluetoothGattCharacteristic characteristic) {
-        final Intent intent = new Intent(action);
-        System.out.println("BluetoothLeService broadcastUpdate");
-        // For all other profiles, writes the data formatted in HEX.
-        final byte[] data = characteristic.getValue();
-        if (data != null && data.length > 0) {
-            intent.putExtra(EXTRA_DATA, new String(data));
-            sendBroadcast(intent);
-        }
-    }*/
     private void broadcastCount(final BluetoothGattCharacteristic characteristic) {
         ArrayList<String> msg;
         System.out.println("BluetoothLeService broadcastUpdate");
@@ -425,27 +390,20 @@ public class BLESensor extends Service {
                     mSCharacteristic = mSerialPortCharacteristic;
                     setCharacteristicNotification(mSCharacteristic, true);
                     mConnectionState = STATE_CONNECTED;
-                    sendCount(STATE_CONNECTED, -1, -1, -1.0F, "");
+                    sendState(STATE_CONNECTED,"");
                     //
 
                 } else {
-                    //Toast.makeText(mainContext, "Please select DFRobot devices",Toast.LENGTH_SHORT).show();
                     mConnectionState = STATE_CONNECTING;
-                    sendCount(STATE_DISCONNECTED, -1, -1, -1.0F, "");
-                    //onConectionStateChange(mConnectionState);
+                    sendState(STATE_DISCONNECTED,"");
                 }
             } else if (mSCharacteristic == mSerialPortCharacteristic) {
-                msg = splitMessage(new String(data));
-                sendCount(STATE_CONNECTED, Integer.parseInt(msg.get(0)), Integer.parseInt(msg.get(1)), Float.parseFloat(msg.get(2)), "");
+                sendCount(new String(data));
             }
         }
 //        }
     }
 
-    /*private void broadcastUpdate(final String action) {
-        final Intent intent = new Intent(action);
-        sendBroadcast(intent);
-    }*/
 
     @Nullable
     @Override
@@ -453,49 +411,31 @@ public class BLESensor extends Service {
         return null;
     }
 
-    /*public class LocalBinder extends Binder {
 
-        public BLESensor getService() {
-
-            return BLESensor.this;
-
-        }
-
-    }
-
-    private final IBinder mBinder = new LocalBinder();*/
-
-    /*@Override
-    public IBinder onBind(Intent intent) {
-        Log.d("BinderService", "Binding...");
-
-        return mBinder;
-    }*/
-
-    private void sendCount(Integer s, Integer count, Integer millis, Float power, String msg) {
+    private void sendCount(String data) {
         Intent intent = new Intent(SENSOR);
-        intent.putExtra(SENSOR_CONNECTED, s);
-        intent.putExtra(SENSOR_COUNT, count);
-        intent.putExtra(SENSOR_TIME, millis);
-        intent.putExtra(SENSOR_POWER, power);
-        intent.putExtra(SENSOR_MSG, msg);
+        intent.putExtra(SENSOR_DATA, STATE_CONNECTED + ";" + data + "; ;");
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
-    private ArrayList<String> splitMessage(String msg) {
-        StringTokenizer strTkn = new StringTokenizer(msg, DELIMITERS);
-        ArrayList<String> arrLis = new ArrayList<>(msg.length());
-
-        while (strTkn.hasMoreTokens())
-            arrLis.add(strTkn.nextToken());
-
-        return arrLis;
+    private void sendState(Integer s, String msg) {
+        String sent = new String();
+        if(msg.equals("")){
+            sent = s + ";" + -1 + ";" + -1 + ";" + -1.0F + "; ;";
+        }
+        else{
+            sent = s + ";" + -1 + ";" + -1 + ";" + -1.0F + ";" + msg + ";";
+        }
+        Intent intent = new Intent(SENSOR);
+        intent.putExtra(SENSOR_DATA, sent);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
+
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        sendCount(STATE_DISCONNECTED, -1, -1, -1.0F, "");
+        sendState(STATE_DISCONNECTED,"");
         stop = true;
         disconnect();
         close();

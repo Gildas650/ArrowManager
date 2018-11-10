@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import fr.arrowm.arrowm.Business.SimpleCircularProgressbar;
 import fr.arrowm.arrowm.Db.ArrowDataBase;
@@ -34,8 +35,8 @@ public class HomeAct extends AppCompatActivity {
     public static final String OBJ_WEEK = "objWeek";
     public static final String OBJ_MONTH = "objMonth";
     public static final String SENSOR = "sensor";
-    public static final String SENSOR_CONNECTED = "sensorConnected";
-    public static final String SENSOR_MSG = "sensorMsg";
+    public static final String SENSOR_DATA = "sensorData";
+    public static final String DELIMITERS = ";";
     private final static int REQUEST_ENABLE_BT = 1;
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
@@ -56,20 +57,25 @@ public class HomeAct extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             MenuItem item = menu.findItem(R.id.launch_service);
-            if (intent.getIntExtra(SENSOR_CONNECTED, STATE_DISCONNECTED) == STATE_CONNECTED) {
+            ArrayList<String> msg = new ArrayList<>();
+            msg = splitMessage(intent.getStringExtra(SENSOR_DATA));
+            if (Integer.parseInt(msg.get(0)) == STATE_CONNECTED) {
                 bleState = STATE_CONNECTED;
                 item.setIcon(R.drawable.ic_bluetooth);
-            } else if (intent.getIntExtra(SENSOR_CONNECTED, STATE_DISCONNECTED) == STATE_CONNECTING) {
+            } else if (Integer.parseInt(msg.get(0)) == STATE_CONNECTING) {
                 bleState = STATE_CONNECTING;
                 item.setIcon(R.drawable.ic_bluetoothwait);
             } else {
                 bleState = STATE_DISCONNECTED;
                 item.setIcon(R.drawable.ic_bluetoothoff);
             }
-            if (!intent.getStringExtra(SENSOR_MSG).equals("")) {
-                Log.e("msg", intent.getStringExtra(SENSOR_MSG));
-                if (getResources().getIdentifier(intent.getStringExtra(SENSOR_MSG), "string", PACKAGE_NAME) != 0) {
-                    Toast.makeText(getApplicationContext(), getResources().getIdentifier(intent.getStringExtra(SENSOR_MSG), "string", PACKAGE_NAME), Toast.LENGTH_LONG).show();
+            if (!(msg.get(4).equals(" "))) {
+                Log.e("msg", msg.get(4));
+                if (getResources().getIdentifier(msg.get(4), "string", PACKAGE_NAME) != 0) {
+                    Toast.makeText(getApplicationContext(), getResources().getIdentifier(msg.get(4), "string", PACKAGE_NAME), Toast.LENGTH_LONG).show();
+                }
+                else{
+                    Toast.makeText(getApplicationContext(),msg.get(4), Toast.LENGTH_LONG).show();
                 }
             }
         }
@@ -216,42 +222,13 @@ public class HomeAct extends AppCompatActivity {
         }
     }
 
-    /*BLESensor mService = null;
+    private ArrayList<String> splitMessage(String msg) {
+        StringTokenizer strTkn = new StringTokenizer(msg, DELIMITERS);
+        ArrayList<String> arrLis = new ArrayList<>(msg.length());
 
-    boolean mServiceConnected = false;
+        while (strTkn.hasMoreTokens())
+            arrLis.add(strTkn.nextToken());
 
-    private ServiceConnection mConn = new ServiceConnection() {
-
-        @Override
-
-        public void onServiceConnected(ComponentName className, IBinder binder) {
-
-            Log.d("BinderActivity", "Connected to service.");
-
-            mService = ((BLESensor.LocalBinder) binder).getService();
-
-            mServiceConnected = true;
-
-        }*/
-
-
-    /**
-
-     * Connection dropped.
-
-     */
-
-        /*Override
-
-        public void onServiceDisconnected(ComponentName className) {
-
-            Log.d("BinderActivity", "Disconnected from service.");
-
-            mService = null;
-
-            mServiceConnected = false;
-
-        }
-
-    };*/
+        return arrLis;
+    }
 }
