@@ -72,27 +72,9 @@
             android:textColor="@color/darkGrey" />
 
         <TextView
-            android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Vo :"
-            android:textColor="@color/darkGrey"
-            android:textStyle="normal|bold" />
-
-        <TextView
-            android:id="@+id/vol"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="left|center_vertical"
-            android:paddingLeft="2dp"
-            android:text="00"
-            android:textColor="@color/darkGrey" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Moy :"
+            android:text="Moyenne :"
             android:textColor="@color/darkGrey"
             android:textStyle="normal|bold" />
 

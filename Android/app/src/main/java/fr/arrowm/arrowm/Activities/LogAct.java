@@ -36,12 +36,6 @@ public class LogAct extends AppCompatActivity {
         this.sessions = db.selectAll();
         db.close();
 
-        for (int i =0; i<this.sessions.size(); i++){
-            if (this.sessions.get(i).getEndOfSession() == null){
-                this.sessions.remove(i);
-                i = i-1;
-            }
-        }
         SessionAdapter adapter = new SessionAdapter(LogAct.this, sessions);
         logView.setAdapter(adapter);
     }

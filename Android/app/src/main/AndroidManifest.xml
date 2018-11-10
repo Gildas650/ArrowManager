@@ -33,7 +33,6 @@
         <activity android:name=".Activities.SettingsAct" />
         <activity android:name=".Activities.RoundAct" />
         <activity android:name=".Activities.LogAct"></activity>
-
     </application>
 
 </manifest>

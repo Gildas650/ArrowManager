@@ -14,9 +14,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.StringTokenizer;
-
 import fr.arrowm.arrowm.R;
 
 public class SensorData extends AppCompatActivity {
@@ -25,8 +22,9 @@ public class SensorData extends AppCompatActivity {
     public static final String PREFERENCES = "ArrowPrefs";
     public static final String SENSOR_NAME = "sensorName";
     public static final String SENSOR = "sensor";
-    public static final String SENSOR_DATA = "sensorData";
-    public static final String DELIMITERS = ";";
+    public static final String SENSOR_COUNT = "sensorCount";
+    public static final String SENSOR_TIME = "sensorTime";
+    public static final String SENSOR_POWER = "sensorPower";
     private TextView arrow_count;
     private TextView arrow_millis;
     private TextView arrow_power;
@@ -38,17 +36,15 @@ public class SensorData extends AppCompatActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            ArrayList<String> msg = new ArrayList<>();
-            msg = splitMessage(intent.getStringExtra(SENSOR_DATA));
-            if (Integer.parseInt(msg.get(1)) != -1) {
-                arrow_count.setText(Integer.parseInt(msg.get(1)) + "");
+            if (intent.getIntExtra(SENSOR_COUNT, -1) != -1) {
+                arrow_count.setText(intent.getIntExtra(SENSOR_COUNT, -1) + "");
             }
-            if (Integer.parseInt(msg.get(2)) != -1) {
-                Float t = (float) Integer.parseInt(msg.get(2))/ 1000;
+            if (intent.getIntExtra(SENSOR_TIME, -1) != -1) {
+                Float t = (float) intent.getIntExtra(SENSOR_TIME, -1) / 1000;
                 arrow_millis.setText(t + "");
             }
-            if (Float.parseFloat(msg.get(3)) != -1) {
-                arrow_power.setText(Float.parseFloat(msg.get(3)) + "");
+            if (intent.getFloatExtra(SENSOR_POWER, -1.0F) != -1) {
+                arrow_power.setText(intent.getFloatExtra(SENSOR_POWER, -1.0F) + "");
             }
         }
     };
@@ -104,14 +100,5 @@ public class SensorData extends AppCompatActivity {
                 new IntentFilter(SENSOR));
     }
 
-    private ArrayList<String> splitMessage(String msg) {
-        StringTokenizer strTkn = new StringTokenizer(msg, DELIMITERS);
-        ArrayList<String> arrLis = new ArrayList<>(msg.length());
-
-        while (strTkn.hasMoreTokens())
-            arrLis.add(strTkn.nextToken());
-
-        return arrLis;
-    }
 
 }

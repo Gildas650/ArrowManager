@@ -1,9 +1,7 @@
 package fr.arrowm.arrowm.Activities;
 
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -41,7 +39,6 @@ import com.jjoe64.graphview.series.Series;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.StringTokenizer;
 
 import fr.arrowm.arrowm.Business.Event;
 import fr.arrowm.arrowm.Business.Session;
@@ -56,8 +53,11 @@ public class SessionAct extends AppCompatActivity {
     public static final String TOL_TIMING = "tolTiming";
     public final static String SESSION = "com.arrowM.SESSION";
     public static final String SENSOR = "sensor";
-    public static final String SENSOR_DATA = "sensorData";
-    public static final String DELIMITERS = ";";
+    public static final String SENSOR_CONNECTED = "sensorConnected";
+    public static final String SENSOR_MSG = "sensorMsg";
+    public static final String SENSOR_COUNT = "sensorCount";
+    public static final String SENSOR_TIME = "sensorTime";
+    public static final String SENSOR_POWER = "sensorPower";
     public final static String IS_BLUETOOTHON = "com.arrowM.MESSAGE2";
     public final static Integer WAITING_PERIOD = 10;
     public final static Float LOWBAT = 3.3F;
@@ -106,66 +106,51 @@ public class SessionAct extends AppCompatActivity {
     private BarGraphSeries<DataPoint> series;
     private Float tolerance;
     private DecimalFormat df;
-    private LocalBroadcastManager localBroadcastManager;
-    private AlertDialog.Builder alertDialog;
     private BroadcastReceiver sensorListener = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            ArrayList<String> msg = new ArrayList<>();
-            msg = splitMessage(intent.getStringExtra(SENSOR_DATA));
-            if (msg.size() == 5) {
-                //State
-                setBLEIcon(Integer.parseInt(msg.get(0)));
-                //Count
-                if (Integer.parseInt(msg.get(1)) != -1) {
-                    addCountfromBLE(Integer.parseInt(msg.get(1)), lastBLECount);
-                }
-                //Time
-                if (Integer.parseInt(msg.get(2)) != -1) {
-                    Integer ti = Integer.parseInt(msg.get(2));
-                    session.addArrowTime(ti);
-                    timeLast = ti;
-                    if (ti > timeMax || timeMax == 0) {
-                        timeMax = ti;
-                    }
-                    if (ti < timeMin || timeMin == 0) {
-                        timeMin = ti;
-                    }
-                    Integer total = 0;
-                    for (Integer tti : session.getArrowTime()) {
-                        total += tti;
-                    }
-                    timeAvg = total / session.getArrowTime().size();
-                    lastTime.setText(df.format((double) timeLast / (double) 1000));
-                    minTime.setText(df.format((double) timeMin / (double) 1000));
-                    maxTime.setText(df.format((double) timeMax / (double) 1000));
-                    averageTime.setText(df.format((double) timeAvg / (double) 1000));
-                    renderGraph();
 
+            //State
+            setBLEIcon(intent.getIntExtra(SENSOR_CONNECTED, STATE_DISCONNECTED));
+            //Count
+            if (intent.getIntExtra(SENSOR_COUNT, -1) != -1) {
+                addCountfromBLE(intent.getIntExtra(SENSOR_COUNT, -1), lastBLECount);
+            }
+            //Time
+            if (intent.getIntExtra(SENSOR_TIME, -1) != -1) {
+                Integer ti = intent.getIntExtra(SENSOR_TIME, -1);
+                session.addArrowTime(ti);
+                timeLast = ti;
+                if (ti > timeMax || timeMax == 0) {
+                    timeMax = ti;
                 }
-                //Power
-                if (Float.parseFloat(msg.get(3)) != -1) {
-                    if (Float.parseFloat(msg.get(3)) < LOWBAT) {
-                        blelowbat.setVisibility(View.VISIBLE);
-                    }
+                if (ti < timeMin || timeMin == 0) {
+                    timeMin = ti;
                 }
-                //Message
-                if (!(msg.get(4).equals(" "))) {
-                    Log.e("msg", msg.get(4));
-                    Log.e("msg", getResources().getIdentifier(msg.get(4), "string", PACKAGE_NAME) + "");
-                    if (getResources().getIdentifier(msg.get(4), "string", PACKAGE_NAME) != 0) {
-                        Toast.makeText(getApplicationContext(), getResources().getIdentifier(msg.get(4), "string", PACKAGE_NAME), Toast.LENGTH_LONG).show();
-                    }
-                    else{
-                        Toast.makeText(getApplicationContext(),msg.get(4), Toast.LENGTH_LONG).show();
-                    }
+                Integer total = 0;
+                for (Integer tti : session.getArrowTime()) {
+                    total += tti;
                 }
-
-                updateSession(session);
-
-            } else {
-                Toast.makeText(getApplicationContext(), R.string.error_data + intent.getStringExtra(SENSOR_DATA), Toast.LENGTH_LONG).show();
+                timeAvg = total / session.getArrowTime().size();
+                lastTime.setText(df.format((double) timeLast / (double) 1000));
+                minTime.setText(df.format((double) timeMin / (double) 1000));
+                maxTime.setText(df.format((double) timeMax / (double) 1000));
+                averageTime.setText(df.format((double) timeAvg / (double) 1000));
+                renderGraph();
+            }
+            //Power
+            if (intent.getFloatExtra(SENSOR_POWER, -1.0F) != -1) {
+                if (intent.getFloatExtra(SENSOR_POWER, -1.0F) < LOWBAT) {
+                    blelowbat.setVisibility(View.VISIBLE);
+                }
+            }
+            //Message
+            if (!intent.getStringExtra(SENSOR_MSG).equals("")) {
+                Log.e("msg", intent.getStringExtra(SENSOR_MSG));
+                if (getResources().getIdentifier(intent.getStringExtra(SENSOR_MSG), "string", PACKAGE_NAME) != 0) {
+                    Toast.makeText(getApplicationContext(), getResources().getIdentifier(intent.getStringExtra(SENSOR_MSG), "string", PACKAGE_NAME), Toast.LENGTH_LONG).show();
+                }
             }
         }
     };
@@ -175,8 +160,6 @@ public class SessionAct extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_session);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        PACKAGE_NAME = getApplicationContext().getPackageName();
-        localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
         this.initializeScreen();
 
@@ -184,10 +167,6 @@ public class SessionAct extends AppCompatActivity {
         if (intent.getSerializableExtra(SESSION) != null) {
             session = (Session) intent.getSerializableExtra(SESSION);
         }
-        else if (getLastSession().getEndOfSession() == null){
-            alertDialog.show();
-        }
-
         if (intent.getSerializableExtra(IS_BLUETOOTHON) != null) {
             session.setBLEState((Integer) intent.getSerializableExtra(IS_BLUETOOTHON));
         }
@@ -231,8 +210,6 @@ public class SessionAct extends AppCompatActivity {
                 nbOfArrows.setText("");
                 if (session.getNumberOfArrows() + (seekBar.getProgress() - center) > 0) {
                     session.setNumberOfArrows(session.getNumberOfArrows() + (seekBar.getProgress() - center));
-
-                    updateSession(session);
                 } else {
                     session.setNumberOfArrows(0);
                 }
@@ -244,7 +221,6 @@ public class SessionAct extends AppCompatActivity {
 
         nRound.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                localBroadcastManager.unregisterReceiver(sensorListener);
                 if (!session.isExistRound()) {
                     int i = rounds.getSelectedItemPosition();
                     session.setRound(roundList.get(i));
@@ -315,11 +291,13 @@ public class SessionAct extends AppCompatActivity {
         closeSession.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (sureToClose.isChecked()) {
-                    localBroadcastManager.unregisterReceiver(sensorListener);
                     runTask = false;
                     session.closeSession();
                     if (session.getNumberOfArrows() > 0) {
-                        updateSession(session);
+                        db.open();
+                        db.insert(session);
+                        db.close();
+
                     }
                     finish();
                 }
@@ -330,17 +308,17 @@ public class SessionAct extends AppCompatActivity {
 
         initializeTime();
 
-        localBroadcastManager.registerReceiver(sensorListener,
+        LocalBroadcastManager.getInstance(this).registerReceiver(sensorListener,
                 new IntentFilter(SENSOR));
     }
 
     @Override
     public void onBackPressed() {
-         if (secondRet || session.getNumberOfArrows() == 0) {
+        if (secondRet || session.getNumberOfArrows() == 0) {
             runTask = false;
             finish();
         } else {
-            //Toast.makeText(getApplicationContext(), "Attention, la session ne sera pas sauvegardée !!!, Appuyez a nouveau sur retour pour continuer", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Attention, la session ne sera pas sauvegardée !!!, Appuyez a nouveau sur retour pour continuer", Toast.LENGTH_LONG).show();
             secondRet = true;
         }
     }
@@ -348,7 +326,6 @@ public class SessionAct extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         runTask = true;
         updateView uv = new updateView();
         uv.execute();
@@ -362,13 +339,7 @@ public class SessionAct extends AppCompatActivity {
             rounds.setEnabled(false);
         }
 
-        secondRet = false;
 
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
     }
 
     private void initializeScreen() {
@@ -428,23 +399,6 @@ public class SessionAct extends AppCompatActivity {
                 R.layout.spinner_layout, chronoList);
         adapter2.setDropDownViewResource(R.layout.spinner_layout);
         chronos.setAdapter(adapter2);
-
-        alertDialog = new AlertDialog.Builder(this);
-        alertDialog.setTitle(R.string.dialog_title);
-        alertDialog.setMessage(R.string.dialog_texte);
-        alertDialog.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        db.open();
-                        session = db.selectLast().get(0);
-                        db.close();
-                    }
-                });
-        alertDialog.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        // do nothing
-                    }
-                });
-        alertDialog.setIcon(android.R.drawable.ic_dialog_alert);
 
     }
 
@@ -613,7 +567,6 @@ public class SessionAct extends AppCompatActivity {
             }
             this.lastBLECount = BLECount;
         }
-
     }
 
     private void displayToastBelowView(View v, String message) {
@@ -713,36 +666,6 @@ public class SessionAct extends AppCompatActivity {
             progress.setProgress(Integer.parseInt(values[1] + ""));
         }
 
-    }
-    private ArrayList<String> splitMessage(String msg) {
-        StringTokenizer strTkn = new StringTokenizer(msg, DELIMITERS);
-        ArrayList<String> arrLis = new ArrayList<>(msg.length());
-
-        while (strTkn.hasMoreTokens())
-            arrLis.add(strTkn.nextToken());
-
-        return arrLis;
-    }
-
-    private void updateSession(Session s){
-        db.open();
-        if (s.getDbId() == -1){
-            db.insert(s);
-        }
-        else{
-            db.removeSession(s.getDbId());
-            db.insert(s);
-        }
-
-        db.close();
-    }
-
-    private Session getLastSession() {
-        db.open();
-        Session s = db.selectLast().get(0);
-        db.close();
-
-        return s;
     }
 
 }

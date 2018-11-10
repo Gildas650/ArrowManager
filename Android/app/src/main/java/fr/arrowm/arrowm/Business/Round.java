@@ -1,8 +1,6 @@
 package fr.arrowm.arrowm.Business;
 
 import java.io.Serializable;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 
@@ -89,7 +87,7 @@ public class Round implements Serializable {
     }
 
     public float[] getStats() {
-        float ret[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+        float ret[] = {0, 0, 0, 0, 0, 0, 0, 0};
         int nbArrows = 0;
         //[0] Total
         //[1] Moy
@@ -99,7 +97,6 @@ public class Round implements Serializable {
         //[5] subTotal Round 1
         //[6] subTotal Round 2
         //[7] subTotal Round 3
-        //[8] nb volée
 
         for (int i = 0; i < this.scorecard.size(); i++) {
             int nbArrowsbyShot = this.event.getShoot() * this.event.getArrowsByShoot();
@@ -124,9 +121,6 @@ public class Round implements Serializable {
             }
         }
         ret[1] = ret[0] / nbArrows;
-        DecimalFormat df = new DecimalFormat("##");
-        df.setRoundingMode(RoundingMode.DOWN);
-        ret[8] = Float.parseFloat(df.format(this.scorecard.size()/nbArrowsbyShoot));
         return ret;
 
     }
