@@ -8,6 +8,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -24,29 +25,23 @@ import fr.arrowm.arrowm.Business.Score;
 import fr.arrowm.arrowm.Business.Session;
 
 public class ArrowDataBase {
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 6;
 
     //Sensor Table description : store sensor data
     private static final String DBNAME = "arrow.db";
-    private static final String ARROW_TABLE_NAME = "sensor";
     private static final String ID = "id";
-    private static final String RAW_1 = "raw1";
-    private static final String RAW_2 = "raw2";
-    private static final String RAW_3 = "raw3";
-    private static final String ARROW_1 = "arrow1";
-    private static final String ARROW_2 = "arrow2";
-    private static final String ARROW_3 = "arrow3";
+
 
     //Session Table description : store session data (Training or Competition)
     private static final String SESSION_TABLE_NAME = "session";
+    private static final String SESSION_TABLE_NAME_TMP = "session_tmp";
     private static final String NUMBER_OF_ARROWS = "numberofarrows";
     private static final String SESSION_START = "sessionstart";
     private static final String SESSION_END = "sessionend";
-    private static final String IS_COMPETITION = "iscompetition";
-    private static final String COMMENT = "comment";
 
     //Score table description : store all score relative to a session (SESSION ID)
     private static final String SCORE_TABLE_NAME = "score";
+    private static final String SCORE_TABLE_NAME_TMP = "score_tmp";
     private static final String SESSION_ID = "sessionid";
     private static final String EVENT = "event";
     private static final String SCORE = "score";
@@ -55,6 +50,7 @@ public class ArrowDataBase {
 
     //Timing table description : store all timing relative to a session (SESSION ID)
     private static final String ARROWTIME_TABLE_NAME = "arrowtime";
+    private static final String ARROWTIME_TABLE_NAME_TMP = "arrowtime_tmp";
     private static final String ARROWTIME = "arrowtime";
 
     private SQLiteDatabase bdd;
@@ -75,7 +71,7 @@ public class ArrowDataBase {
         bdd.close();
     }
 
-    public long insert(Session s) {
+    public long insert(Session s, Boolean isTemp) {
 
         //Insert session and retreive Id for all score
         ContentValues sessionValues = new ContentValues();
@@ -84,7 +80,13 @@ public class ArrowDataBase {
         if (s.getEndOfSession() != null) {
             sessionValues.put(SESSION_END, df.format(s.getEndOfSession()));
         }
-        long id = bdd.insert(SESSION_TABLE_NAME, null, sessionValues);
+        long id;
+        if(isTemp) {
+            id = bdd.insert(SESSION_TABLE_NAME_TMP, null, sessionValues);
+        }
+        else{
+            id = bdd.insert(SESSION_TABLE_NAME, null, sessionValues);
+        }
 
         //Insert scores
         if (s.isExistRound()) {
@@ -96,7 +98,12 @@ public class ArrowDataBase {
                 roundValues.put(SCORE, r.getScorecard().get(i).getId());
                 roundValues.put(POS_X, r.getImpactcard().get(i).getX());
                 roundValues.put(POS_Y, r.getImpactcard().get(i).getY());
-                bdd.insert(SCORE_TABLE_NAME, null, roundValues);
+                if(isTemp) {
+                    bdd.insert(SCORE_TABLE_NAME_TMP, null, roundValues);
+                }
+                else{
+                    bdd.insert(SCORE_TABLE_NAME, null, roundValues);
+                }
             }
         }
 
@@ -106,7 +113,12 @@ public class ArrowDataBase {
             for (int j = 0; j < s.getArrowTime().size(); j++) {
                 timingValues.put(SESSION_ID, id);
                 timingValues.put(ARROWTIME, s.getArrowTime().get(j));
-                bdd.insert(ARROWTIME_TABLE_NAME, null, timingValues);
+                if(isTemp){
+                    bdd.insert(ARROWTIME_TABLE_NAME_TMP, null, timingValues);
+                }
+                else {
+                    bdd.insert(ARROWTIME_TABLE_NAME, null, timingValues);
+                }
             }
         }
 
@@ -125,14 +137,34 @@ public class ArrowDataBase {
         return bdd.delete(SESSION_TABLE_NAME, ID + " = " + id, null);
     }
 
+    //Remove a session and all relative scores
+    public void dropTmp() {
+        bdd.execSQL("delete from "+ ARROWTIME_TABLE_NAME_TMP);
+        bdd.execSQL("delete from "+ SCORE_TABLE_NAME_TMP);
+        bdd.execSQL("delete from "+ SESSION_TABLE_NAME_TMP);
+    }
+
     //Fecth a session object from his ID in DB
-    private Session selectSessionWithID(String[] args) {
-        Cursor sessionCursor = bdd.rawQuery("SELECT * from " + SESSION_TABLE_NAME + " WHERE id = ? ", args);
-        Cursor roundCursor = bdd.rawQuery("SELECT * from " + SCORE_TABLE_NAME + " WHERE " + SESSION_ID + " = ? ", args);
-        Cursor timingCursor = bdd.rawQuery("SELECT * from " + ARROWTIME_TABLE_NAME + " WHERE " + SESSION_ID + " = ? ", args);
-        Session s = cursorToSession(sessionCursor, roundCursor, timingCursor);
-        sessionCursor.close();
-        roundCursor.close();
+    private Session selectSessionWithID(String[] args, Boolean isTemp) {
+        Session s;
+        if(isTemp){
+            Cursor sessionCursor = bdd.rawQuery("SELECT * from " + SESSION_TABLE_NAME_TMP + " WHERE id = ? ", args);
+            Cursor roundCursor = bdd.rawQuery("SELECT * from " + SCORE_TABLE_NAME_TMP + " WHERE " + SESSION_ID + " = ? ", args);
+            Cursor timingCursor = bdd.rawQuery("SELECT * from " + ARROWTIME_TABLE_NAME_TMP + " WHERE " + SESSION_ID + " = ? ", args);
+            s = cursorToSession(sessionCursor, roundCursor, timingCursor);
+            sessionCursor.close();
+            roundCursor.close();
+            timingCursor.close();
+        }
+        else {
+            Cursor sessionCursor = bdd.rawQuery("SELECT * from " + SESSION_TABLE_NAME + " WHERE id = ? ", args);
+            Cursor roundCursor = bdd.rawQuery("SELECT * from " + SCORE_TABLE_NAME + " WHERE " + SESSION_ID + " = ? ", args);
+            Cursor timingCursor = bdd.rawQuery("SELECT * from " + ARROWTIME_TABLE_NAME + " WHERE " + SESSION_ID + " = ? ", args);
+            s = cursorToSession(sessionCursor, roundCursor, timingCursor);
+            sessionCursor.close();
+            roundCursor.close();
+            timingCursor.close();
+        }
         return s;
     }
 
@@ -144,7 +176,7 @@ public class ArrowDataBase {
         if (cursor.getCount() > 0) {
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 String[] tmp = {cursor.getInt(0) + ""};
-                session = selectSessionWithID(tmp);
+                session = selectSessionWithID(tmp,false);
                 sessions.add(0, session);
             }
         }
@@ -153,19 +185,17 @@ public class ArrowDataBase {
     }
 
     //Select last session in DB (used for list of sessions)
-    public LinkedList<Session> selectLast() {
-        LinkedList<Session> sessions = new LinkedList<>();
-        Cursor cursor = bdd.rawQuery("SELECT MAX(" + ID + ") from " + SESSION_TABLE_NAME , null);
-        Session session;
+    public Session selectTmp() {
+        Cursor cursor = bdd.rawQuery("SELECT "+ ID + " from " + SESSION_TABLE_NAME_TMP , null);
+        Session session = null;
         if (cursor.getCount() > 0) {
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 String[] tmp = {cursor.getInt(0) + ""};
-                session = selectSessionWithID(tmp);
-                sessions.add(0, session);
+                session = selectSessionWithID(tmp, true);
             }
         }
         cursor.close();
-        return sessions;
+        return session;
     }
 
     //Fect information for objective progress bar in Home Activity (index 0 : number of arrow in next week, index 1 : number of arrows in last month)

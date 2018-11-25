@@ -164,12 +164,15 @@ public class HomeAct extends AppCompatActivity {
                     BLEEnable();
                     item.setIcon(R.drawable.ic_bluetoothwait);
                     if (isMyServiceRunning(BLESensor.class)) {
+                        Log.i("Home", "Stop services isMyServiceRunning");
                         stopService(bleService);
                     }
+                    Log.i("Home", "Start services");
                     startService(bleService);
                     bluetoothOn = true;
                 } else {
                     item.setIcon(R.drawable.ic_bluetoothoff);
+                    Log.i("Home", "Stop services");
                     stopService(bleService);
                     bluetoothOn = false;
                 }

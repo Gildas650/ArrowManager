@@ -91,7 +91,6 @@ public class SessionAct extends AppCompatActivity {
     private ArrayList<String> chronoList = new ArrayList<String>();
     private ArrayList<Integer> chronoTime = new ArrayList<Integer>();
     private ArrowDataBase db = new ArrowDataBase(this);
-    private boolean secondRet = false;
     private boolean standbyUpdateNumbersOfArrows = false;
     private boolean displayProgress = false;
     private Integer iniTime = 0;
@@ -109,6 +108,7 @@ public class SessionAct extends AppCompatActivity {
     private DecimalFormat df;
     private LocalBroadcastManager localBroadcastManager;
     private AlertDialog.Builder alertDialog;
+    private AlertDialog.Builder alertDialog2;
     private BroadcastReceiver sensorListener = new BroadcastReceiver() {
 
         @Override
@@ -163,7 +163,7 @@ public class SessionAct extends AppCompatActivity {
                     }
                 }
 
-                updateSession(session);
+                updateSession(session,true);
 
             } else {
                 Toast.makeText(getApplicationContext(), R.string.error_data + intent.getStringExtra(SENSOR_DATA), Toast.LENGTH_LONG).show();
@@ -185,8 +185,8 @@ public class SessionAct extends AppCompatActivity {
         if (intent.getSerializableExtra(SESSION) != null) {
             session = (Session) intent.getSerializableExtra(SESSION);
         }
-        else if (getLastSession().getEndOfSession() == null){
-            alertDialog.show();
+        else if (getLastSession() != null){
+                alertDialog.show();
         }
 
         if (intent.getSerializableExtra(IS_BLUETOOTHON) != null) {
@@ -233,7 +233,7 @@ public class SessionAct extends AppCompatActivity {
                 if (session.getNumberOfArrows() + (seekBar.getProgress() - center) > 0) {
                     session.setNumberOfArrows(session.getNumberOfArrows() + (seekBar.getProgress() - center));
 
-                    updateSession(session);
+                    updateSession(session,true);
                 } else {
                     session.setNumberOfArrows(0);
                 }
@@ -320,7 +320,7 @@ public class SessionAct extends AppCompatActivity {
                     runTask = false;
                     session.closeSession();
                     if (session.getNumberOfArrows() > 0) {
-                        updateSession(session);
+                        updateSession(session,false);
                     }
                     finish();
                 }
@@ -337,13 +337,8 @@ public class SessionAct extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-         if (secondRet || session.getNumberOfArrows() == 0) {
             runTask = false;
             finish();
-        } else {
-            //Toast.makeText(getApplicationContext(), "Attention, la session ne sera pas sauvegardée !!!, Appuyez a nouveau sur retour pour continuer", Toast.LENGTH_LONG).show();
-            secondRet = true;
-        }
     }
 
     @Override
@@ -362,8 +357,6 @@ public class SessionAct extends AppCompatActivity {
             }
             rounds.setEnabled(false);
         }
-
-        secondRet = false;
 
     }
 
@@ -436,23 +429,35 @@ public class SessionAct extends AppCompatActivity {
         alertDialog.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         db.open();
-                        session = db.selectLast().get(0);
+                        session = db.selectTmp();
                         db.close();
                     }
                 });
         alertDialog.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        db.open();
-                        LinkedList<Session> list = db.selectAll();
-                        for (int i =0; i < list.size(); i++) {
-                            if (list.get(i).getEndOfSession() == null) {
-                                db.removeSession(list.get(i).getDbId());
-                            }
-                        }
-                        db.close();
+                        alertDialog2.show();
                     }
                 });
         alertDialog.setIcon(android.R.drawable.ic_dialog_alert);
+
+        alertDialog2 = new AlertDialog.Builder(this);
+        alertDialog2.setTitle(R.string.dialog_title2);
+        alertDialog2.setMessage(R.string.dialog_texte2);
+        alertDialog2.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                db.open();
+                db.dropTmp();
+                db.close();
+            }
+        });
+        alertDialog2.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                db.open();
+                session = db.selectTmp();
+                db.close();
+            }
+        });
+        alertDialog2.setIcon(android.R.drawable.ic_dialog_alert);
 
     }
 
@@ -732,22 +737,18 @@ public class SessionAct extends AppCompatActivity {
         return arrLis;
     }
 
-    private void updateSession(Session s){
+    private void updateSession(Session s, Boolean isTemp){
         db.open();
-        if (s.getDbId() == -1){
-            db.insert(s);
+        if(isTemp){
+            db.dropTmp();
         }
-        else{
-            db.removeSession(s.getDbId());
-            db.insert(s);
-        }
-
+        db.insert(s,isTemp);
         db.close();
     }
 
     private Session getLastSession() {
         db.open();
-        Session s = db.selectLast().get(0);
+        Session s = db.selectTmp();
         db.close();
 
         return s;

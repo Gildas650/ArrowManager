@@ -20,7 +20,7 @@ import fr.arrowm.arrowm.R;
  * Created by Gildas on 18/12/2016.
  */
 
-public class touchableImageView extends ImageView {
+public class touchableImageView extends android.support.v7.widget.AppCompatImageView {
 
     List<Impact> points = new ArrayList<>();
     Paint paint = new Paint();

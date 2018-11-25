@@ -11,20 +11,21 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-
 import fr.arrowm.arrowm.Business.Impact;
 import fr.arrowm.arrowm.Business.Score;
 import fr.arrowm.arrowm.Business.Session;
@@ -110,7 +111,7 @@ public class RoundAct extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(),msg.get(4), Toast.LENGTH_LONG).show();
                 }
             }
-            updateSession(session);
+            updateSession(session,true);
         }
     };
 
@@ -253,6 +254,15 @@ public class RoundAct extends AppCompatActivity {
             face.setImageResource(R.drawable.starget);
             scoreToUse = Score.values()[0].getStandardList();
         }
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        faceSize= (int) (displayMetrics.widthPixels * 0.95);
+        FrameLayout.LayoutParams fllp =  new FrameLayout.LayoutParams(faceSize, faceSize);
+        fllp.gravity = Gravity.CENTER_HORIZONTAL;
+        face.setLayoutParams(fllp);
+
+
         manageRoundBar();
         manageView();
         if (session.getEndOfSession() != null) {
@@ -264,7 +274,8 @@ public class RoundAct extends AppCompatActivity {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        faceSize = face.getMeasuredHeight();
+        //faceSize = face.getHeight();
+        //faceSize = face.getMeasuredHeight();
         centerPos = faceSize / 2;
         zoneSize = centerPos / circleNumber;
     }
@@ -354,7 +365,7 @@ public class RoundAct extends AppCompatActivity {
             session.addArrow();
         }
         session.getRound().addArrowScore(s, imp);
-        updateSession(session);
+        updateSession(session, true);
         arrowsRemaining--;
 
     }
@@ -367,7 +378,7 @@ public class RoundAct extends AppCompatActivity {
         if (arrowsRemaining < (3 * (session.getRound().getEvent().getArrowsByShoot() * session.getRound().getEvent().getShoot())) - 1) {
             arrowsRemaining++;
         }
-        updateSession(session);
+        updateSession(session,true);
     }
 
     private void initializeScreen() {
@@ -465,16 +476,12 @@ public class RoundAct extends AppCompatActivity {
         return arrLis;
     }
 
-    private void updateSession(Session s){
+    private void updateSession(Session s, Boolean isTemp){
         db.open();
-        if (s.getDbId() == -1){
-            db.insert(s);
+        if(isTemp){
+            db.dropTmp();
         }
-        else{
-            db.removeSession(s.getDbId());
-            db.insert(s);
-        }
-
+        db.insert(s,isTemp);
         db.close();
     }
 }

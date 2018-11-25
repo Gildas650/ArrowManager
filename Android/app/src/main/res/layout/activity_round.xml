@@ -368,11 +368,12 @@
         android:text="@string/title_impact"
         android:textAlignment="center"
         android:textColor="@android:color/white"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:layout_marginBottom="5dp"/>
 
     <FrameLayout
-        android:layout_width="400dp"
-        android:layout_height="400dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="false"
         android:layout_alignParentStart="false"
         android:layout_below="@+id/title3"
@@ -380,10 +381,10 @@
         android:layout_alignParentLeft="false">
 
         <fr.arrowm.arrowm.Business.touchableImageView
-            android:layout_width="328dp"
-            android:layout_height="328dp"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:id="@+id/targetface"
-            android:layout_gravity="center_vertical|center_horizontal" />
+            android:layout_gravity="center_horizontal" />
     </FrameLayout>
 
 </RelativeLayout>

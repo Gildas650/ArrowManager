@@ -72,8 +72,9 @@ public class BLESensor extends Service {
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            System.out.println("BluetoothGattCallback----onConnectionStateChange" + newState);
+            Log.i(TAG, "New State" + newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
+                Log.i(TAG, "New State : Connected");
                 mConnectionState = STATE_CONNECTED;
                 sendState(STATE_CONNECTED,"");
                 Log.i(TAG, "Connected to GATT server.");
@@ -87,7 +88,9 @@ public class BLESensor extends Service {
                 }
 
 
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+            //} else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+            } else {
+                Log.i(TAG, "New State : Disconnected");
                 mConnectionState = STATE_DISCONNECTED;
                 if (!stop) {
                     Log.e(TAG, "Disconnected from GATT server.");
@@ -117,8 +120,7 @@ public class BLESensor extends Service {
             // Loops through available GATT Services.
             for (BluetoothGattService gattService : gattServices) {
                 uuid = gattService.getUuid().toString();
-                System.out.println("displayGattServices + uuid=" + uuid);
-
+                Log.i(TAG, "Gatt service found=" + uuid);
                 List<BluetoothGattCharacteristic> gattCharacteristics =
                         gattService.getCharacteristics();
                 ArrayList<BluetoothGattCharacteristic> charas =
@@ -130,13 +132,13 @@ public class BLESensor extends Service {
                     uuid = gattCharacteristic.getUuid().toString();
                     if (uuid.equals(ModelNumberStringUUID)) {
                         mModelNumberCharacteristic = gattCharacteristic;
-                        System.out.println("mModelNumberCharacteristic  " + mModelNumberCharacteristic.getUuid().toString());
+                        Log.i(TAG, "mModelNumberCharacteristic  " + mModelNumberCharacteristic.getUuid().toString());
                     } else if (uuid.equals(SerialPortUUID)) {
                         mSerialPortCharacteristic = gattCharacteristic;
-                        System.out.println("mSerialPortCharacteristic  " + mSerialPortCharacteristic.getUuid().toString());
+                        Log.i(TAG, "mSerialPortCharacteristic  " + mSerialPortCharacteristic.getUuid().toString());
                     } else if (uuid.equals(CommandUUID)) {
                         mCommandCharacteristic = gattCharacteristic;
-                        System.out.println("mSerialPortCharacteristic  " + mSerialPortCharacteristic.getUuid().toString());
+                        Log.i(TAG, "mSerialPortCharacteristic  " + mSerialPortCharacteristic.getUuid().toString());
                     }
                 }
                 mGattCharacteristics.add(charas);
@@ -154,7 +156,7 @@ public class BLESensor extends Service {
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            System.out.println("onServicesDiscovered " + status);
+            Log.i(TAG, "onServicesDiscovered " + status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 getGattServices(getSupportedGattServices());
             } else {
@@ -168,7 +170,7 @@ public class BLESensor extends Service {
             synchronized (this) {
                 //CharacteristicWrite success
                 if (status == BluetoothGatt.GATT_SUCCESS) {
-                    System.out.println("onCharacteristicWrite success:" + new String(characteristic.getValue()));
+                    Log.i(TAG, "onCharacteristicWrite success:" + new String(characteristic.getValue()));
                     if (mCharacteristicRingBuffer.isEmpty()) {
                         mIsWritingCharacteristic = false;
                     } else {
@@ -184,9 +186,9 @@ public class BLESensor extends Service {
 
 
                             if (mBluetoothGatt.writeCharacteristic(bluetoothGattCharacteristicHelper.mCharacteristic)) {
-                                System.out.println("writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":success");
+                                Log.i(TAG, "writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":success");
                             } else {
-                                System.out.println("writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":failure");
+                                Log.i(TAG, "writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":failure");
                             }
                             bluetoothGattCharacteristicHelper.mCharacteristicValue = bluetoothGattCharacteristicHelper.mCharacteristicValue.substring(MAX_CHARACTERISTIC_LENGTH);
                         } else {
@@ -198,9 +200,9 @@ public class BLESensor extends Service {
                             }
 
                             if (mBluetoothGatt.writeCharacteristic(bluetoothGattCharacteristicHelper.mCharacteristic)) {
-                                System.out.println("writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":success");
+                                Log.i(TAG, "writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":success");
                             } else {
-                                System.out.println("writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":failure");
+                                Log.i(TAG, "writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":failure");
                             }
                             bluetoothGattCharacteristicHelper.mCharacteristicValue = "";
 
@@ -226,9 +228,9 @@ public class BLESensor extends Service {
                             }
 
                             if (mBluetoothGatt.writeCharacteristic(bluetoothGattCharacteristicHelper.mCharacteristic)) {
-                                System.out.println("writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":success");
+                                Log.i(TAG, "writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":success");
                             } else {
-                                System.out.println("writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":failure");
+                                Log.i(TAG, "writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":failure");
                             }
                             bluetoothGattCharacteristicHelper.mCharacteristicValue = bluetoothGattCharacteristicHelper.mCharacteristicValue.substring(MAX_CHARACTERISTIC_LENGTH);
                         } else {
@@ -241,7 +243,7 @@ public class BLESensor extends Service {
 
 
                             if (mBluetoothGatt.writeCharacteristic(bluetoothGattCharacteristicHelper.mCharacteristic)) {
-                                System.out.println("writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":success");
+                                Log.i(TAG, "writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":success");
 //	            	        	System.out.println((byte)bluetoothGattCharacteristicHelper.mCharacteristic.getValue()[0]);
 //	            	        	System.out.println((byte)bluetoothGattCharacteristicHelper.mCharacteristic.getValue()[1]);
 //	            	        	System.out.println((byte)bluetoothGattCharacteristicHelper.mCharacteristic.getValue()[2]);
@@ -250,7 +252,7 @@ public class BLESensor extends Service {
 //	            	        	System.out.println((byte)bluetoothGattCharacteristicHelper.mCharacteristic.getValue()[5]);
 
                             } else {
-                                System.out.println("writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":failure");
+                                Log.i(TAG, "writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":failure");
                             }
                             bluetoothGattCharacteristicHelper.mCharacteristicValue = "";
 
@@ -273,8 +275,8 @@ public class BLESensor extends Service {
                 //CharacteristicWrite fail
                 {
                     mCharacteristicRingBuffer.clear();
-                    System.out.println("onCharacteristicWrite fail:" + new String(characteristic.getValue()));
-                    System.out.println(status);
+                    Log.i(TAG, "onCharacteristicWrite fail:" + new String(characteristic.getValue()));
+                    Log.i(TAG, status + "");
                 }
             }
         }
@@ -285,7 +287,7 @@ public class BLESensor extends Service {
                                          int status) {
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                System.out.println("onCharacteristicRead  " + characteristic.getUuid().toString());
+                Log.i(TAG, "onCharacteristicRead  " + characteristic.getUuid().toString());
                 broadcastCount(characteristic);
             }
         }
@@ -294,13 +296,13 @@ public class BLESensor extends Service {
         public void onDescriptorWrite(BluetoothGatt gatt,
                                       BluetoothGattDescriptor characteristic,
                                       int status) {
-            System.out.println("onDescriptorWrite  " + characteristic.getUuid().toString() + " " + status);
+            Log.i(TAG, "onDescriptorWrite  " + characteristic.getUuid().toString() + " " + status);
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-            System.out.println("onCharacteristicChanged  " + new String(characteristic.getValue()));
+            Log.i(TAG, "onCharacteristicChanged  " + new String(characteristic.getValue()));
             broadcastCount(characteristic);
         }
     };
@@ -323,11 +325,12 @@ public class BLESensor extends Service {
 
         if (mBluetoothDeviceAddress.equals("")) {
             Log.e(TAG, "Address not set in Sensor act");
+            sendState(0,"Address not set in Sensor act");
             return false;
         } else {
             // For API level 18 and above, get a reference to BluetoothAdapter through
             // BluetoothManager.
-            System.out.println("BluetoothLeService initialize" + mBluetoothManager);
+            Log.i(TAG, "BluetoothLeService initialize" + mBluetoothManager);
             if (mBluetoothManager == null) {
                 mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
                 if (mBluetoothManager == null) {
@@ -347,8 +350,7 @@ public class BLESensor extends Service {
     }
 
     public boolean connect(final String address) {
-        System.out.println("BluetoothLeService connect" + address + mBluetoothGatt);
-
+        Log.i(TAG, "BluetoothLeService connect" + address + mBluetoothGatt);
         if (mBluetoothAdapter == null || address == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
             sendState(STATE_DISCONNECTED,"error_init_BLE");
@@ -363,9 +365,10 @@ public class BLESensor extends Service {
         }
         // We want to directly connect to the device, so we are setting the autoConnect
         // parameter to false.
-        System.out.println("device.connectGatt connect");
+        Log.i(TAG, "device.connectGatt connect");
         synchronized (this) {
             mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
+            //mBluetoothGatt = device.connectGatt(this, true, mGattCallback);
         }
         Log.d(TAG, "Trying to create a new connection.");
         mBluetoothDeviceAddress = address;
@@ -375,7 +378,7 @@ public class BLESensor extends Service {
 
     private void broadcastCount(final BluetoothGattCharacteristic characteristic) {
         ArrayList<String> msg;
-        System.out.println("BluetoothLeService broadcastUpdate");
+        Log.i(TAG, "BluetoothLeService broadcastUpdate");
         // For all other profiles, writes the data formatted in HEX.
         final byte[] data = characteristic.getValue();
         if (data != null && data.length > 0) {
@@ -506,11 +509,11 @@ public class BLESensor extends Service {
             // this should never happen because "US-ASCII" is hard-coded.
             throw new IllegalStateException(e);
         }
-        System.out.println("allwriteCharacteristicString:" + writeCharacteristicString);
+        Log.i(TAG, "allwriteCharacteristicString:" + writeCharacteristicString);
 
         //As the communication is asynchronous content string and characteristic should be pushed into an ring buffer for further transmission
         mCharacteristicRingBuffer.push(new BluetoothGattCharacteristicHelper(characteristic, writeCharacteristicString));
-        System.out.println("mCharacteristicRingBufferlength:" + mCharacteristicRingBuffer.size());
+        Log.i(TAG, "mCharacteristicRingBufferlength:" + mCharacteristicRingBuffer.size());
 
 
         //The progress of onCharacteristicWrite and writeCharacteristic is almost the same. So callback function is called directly here
