@@ -17,16 +17,11 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+import fr.arrowm.arrowm.Business.Constants;
 import fr.arrowm.arrowm.R;
 
 public class SensorData extends AppCompatActivity {
 
-
-    public static final String PREFERENCES = "ArrowPrefs";
-    public static final String SENSOR_NAME = "sensorName";
-    public static final String SENSOR = "sensor";
-    public static final String SENSOR_DATA = "sensorData";
-    public static final String DELIMITERS = ";";
     private TextView arrow_count;
     private TextView arrow_millis;
     private TextView arrow_power;
@@ -39,7 +34,7 @@ public class SensorData extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             ArrayList<String> msg = new ArrayList<>();
-            msg = splitMessage(intent.getStringExtra(SENSOR_DATA));
+            msg = splitMessage(intent.getStringExtra(Constants.DECL.SENSOR_DATA));
             if (Integer.parseInt(msg.get(1)) != -1) {
                 arrow_count.setText(Integer.parseInt(msg.get(1)) + "");
             }
@@ -59,14 +54,14 @@ public class SensorData extends AppCompatActivity {
         setContentView(R.layout.activity_sensor_data);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        sharedpreferences = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
+        sharedpreferences = getSharedPreferences(Constants.DECL.PREFERENCES, Context.MODE_PRIVATE);
         editor = sharedpreferences.edit();
 
         arrow_count = (TextView) findViewById(R.id.arrow_count);
         arrow_millis = (TextView) findViewById(R.id.arrow_millis);
         arrow_power = (TextView) findViewById(R.id.arrow_power);
         sName = (EditText) findViewById(R.id.SensorName);
-        sName.setText(sharedpreferences.getString(SENSOR_NAME, ""));
+        sName.setText(sharedpreferences.getString(Constants.DECL.SENSOR_NAME, ""));
 
         //updateView uv = new updateView();
         //uv.execute();
@@ -78,7 +73,7 @@ public class SensorData extends AppCompatActivity {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                 }
-                editor.putString(SENSOR_NAME, sName.getText().toString());
+                editor.putString(Constants.DECL.SENSOR_NAME, sName.getText().toString());
                 editor.commit();
 
                 finish();
@@ -101,11 +96,11 @@ public class SensorData extends AppCompatActivity {
         // We are registering an observer (mMessageReceiver) to receive Intents
         // with actions named "custom-event-name".
         LocalBroadcastManager.getInstance(this).registerReceiver(sensorListener,
-                new IntentFilter(SENSOR));
+                new IntentFilter(Constants.DECL.SENSOR));
     }
 
     private ArrayList<String> splitMessage(String msg) {
-        StringTokenizer strTkn = new StringTokenizer(msg, DELIMITERS);
+        StringTokenizer strTkn = new StringTokenizer(msg, Constants.DECL.DELIMITERS);
         ArrayList<String> arrLis = new ArrayList<>(msg.length());
 
         while (strTkn.hasMoreTokens())

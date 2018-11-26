@@ -10,17 +10,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import fr.arrowm.arrowm.Business.Constants;
 import fr.arrowm.arrowm.R;
 
 //Setting page
 public class SettingsAct extends AppCompatActivity {
 
-    public static final String PREFERENCES = "ArrowPrefs";
-    public static final String BOW_TYPE = "bowType";
-    public static final String OBJ_WEEK = "objWeek";
-    public static final String OBJ_MONTH = "objMonth";
-    public static final String OBJ_SCE = "objSce";
-    public static final String TOL_TIMING = "tolTiming";
+
     private SharedPreferences.Editor editor;
     private Spinner bows;
     private EditText objbyweek;
@@ -39,26 +35,26 @@ public class SettingsAct extends AppCompatActivity {
         objbymonth = (EditText) findViewById(R.id.objbymonth);
         objbysce = (EditText) findViewById(R.id.objbysce);
         toleranceTiming = (EditText) findViewById(R.id.toleranceTiming);
-        SharedPreferences sharedpreferences = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences sharedpreferences = getSharedPreferences(Constants.DECL.PREFERENCES, Context.MODE_PRIVATE);
         editor = sharedpreferences.edit();
-        if (sharedpreferences.getString(BOW_TYPE, "").equals("Compound")) {
+        if (sharedpreferences.getString(Constants.DECL.BOW_TYPE, "").equals("Compound")) {
             bows.setSelection(0);
         } else {
             bows.setSelection(1);
         }
-        objbysce.setText(sharedpreferences.getString(OBJ_SCE, "100"));
-        objbyweek.setText(sharedpreferences.getString(OBJ_WEEK, "500"));
-        objbymonth.setText(sharedpreferences.getString(OBJ_MONTH, "2000"));
-        toleranceTiming.setText(sharedpreferences.getString(TOL_TIMING, "1"));
+        objbysce.setText(sharedpreferences.getString(Constants.DECL.OBJ_SCE, "100"));
+        objbyweek.setText(sharedpreferences.getString(Constants.DECL.OBJ_WEEK, "500"));
+        objbymonth.setText(sharedpreferences.getString(Constants.DECL.OBJ_MONTH, "2000"));
+        toleranceTiming.setText(sharedpreferences.getString(Constants.DECL.TOL_TIMING, "1"));
 
         final Button ret = (Button) findViewById(R.id.validate);
         ret.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                editor.putString(BOW_TYPE, String.valueOf(bows.getSelectedItem()));
-                editor.putString(OBJ_SCE, String.valueOf(objbysce.getText().toString()));
-                editor.putString(OBJ_WEEK, String.valueOf(objbyweek.getText().toString()));
-                editor.putString(OBJ_MONTH, String.valueOf(objbymonth.getText().toString()));
-                editor.putString(TOL_TIMING, String.valueOf(toleranceTiming.getText().toString()));
+                editor.putString(Constants.DECL.BOW_TYPE, String.valueOf(bows.getSelectedItem()));
+                editor.putString(Constants.DECL.OBJ_SCE, String.valueOf(objbysce.getText().toString()));
+                editor.putString(Constants.DECL.OBJ_WEEK, String.valueOf(objbyweek.getText().toString()));
+                editor.putString(Constants.DECL.OBJ_MONTH, String.valueOf(objbymonth.getText().toString()));
+                editor.putString(Constants.DECL.TOL_TIMING, String.valueOf(toleranceTiming.getText().toString()));
                 editor.commit();
                 finish();
             }

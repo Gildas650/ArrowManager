@@ -23,6 +23,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+import fr.arrowm.arrowm.Business.Constants;
 import fr.arrowm.arrowm.Business.SimpleCircularProgressbar;
 import fr.arrowm.arrowm.Db.ArrowDataBase;
 import fr.arrowm.arrowm.R;
@@ -30,17 +31,19 @@ import fr.arrowm.arrowm.Service.BLESensor;
 
 
 public class HomeAct extends AppCompatActivity {
-    public final static String IS_BLUETOOTHON = "com.arrowM.MESSAGE2";
+    /*public final static String IS_BLUETOOTHON = "com.arrowM.MESSAGE2";
     public static final String PREFERENCES = "ArrowPrefs";
     public static final String OBJ_WEEK = "objWeek";
     public static final String OBJ_MONTH = "objMonth";
     public static final String SENSOR = "sensor";
     public static final String SENSOR_DATA = "sensorData";
     public static final String DELIMITERS = ";";
+    public static final String STARTFOREGROUND_ACTION ="fr.arrowm.arrowm.action.startforeground";
+    public static final String STOPFOREGROUND_ACTION ="fr.arrowm.arrowm.action.stopforeground";
     private final static int REQUEST_ENABLE_BT = 1;
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
-    private static final int STATE_CONNECTED = 2;
+    private static final int STATE_CONNECTED = 2;*/
     public static String PACKAGE_NAME;
     private SharedPreferences sharedpreferences;
     private TextView weeklytext;
@@ -58,15 +61,15 @@ public class HomeAct extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             MenuItem item = menu.findItem(R.id.launch_service);
             ArrayList<String> msg = new ArrayList<>();
-            msg = splitMessage(intent.getStringExtra(SENSOR_DATA));
-            if (Integer.parseInt(msg.get(0)) == STATE_CONNECTED) {
-                bleState = STATE_CONNECTED;
+            msg = splitMessage(intent.getStringExtra(Constants.DECL.SENSOR_DATA));
+            if (Integer.parseInt(msg.get(0)) == Constants.BLE.STATE_CONNECTED) {
+                bleState = Constants.BLE.STATE_CONNECTED;
                 item.setIcon(R.drawable.ic_bluetooth);
-            } else if (Integer.parseInt(msg.get(0)) == STATE_CONNECTING) {
-                bleState = STATE_CONNECTING;
+            } else if (Integer.parseInt(msg.get(0)) == Constants.BLE.STATE_CONNECTING) {
+                bleState = Constants.BLE.STATE_CONNECTING;
                 item.setIcon(R.drawable.ic_bluetoothwait);
             } else {
-                bleState = STATE_DISCONNECTED;
+                bleState =Constants.BLE.STATE_DISCONNECTED;
                 item.setIcon(R.drawable.ic_bluetoothoff);
             }
             if (!(msg.get(4).equals(" "))) {
@@ -93,13 +96,13 @@ public class HomeAct extends AppCompatActivity {
         monthlytext = (TextView) findViewById(R.id.monthlytext);
         weeklyprogress = (SimpleCircularProgressbar) findViewById(R.id.weeklyprogress);
         monthlyprogress = (SimpleCircularProgressbar) findViewById(R.id.monthlyprogress);
-        sharedpreferences = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
+        sharedpreferences = getSharedPreferences(Constants.DECL.PREFERENCES, Context.MODE_PRIVATE);
 
         final ImageButton nTraining = (ImageButton) findViewById(R.id.TrainingButton);
         nTraining.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent i = new Intent(HomeAct.this, SessionAct.class);
-                i.putExtra(IS_BLUETOOTHON, bleState);
+                i.putExtra(Constants.DECL.IS_BLUETOOTHON, bleState);
                 startActivityForResult(i, 0);
             }
         });
@@ -113,7 +116,7 @@ public class HomeAct extends AppCompatActivity {
         });
 
         LocalBroadcastManager.getInstance(this).registerReceiver(sensorListener,
-                new IntentFilter(SENSOR));
+                new IntentFilter(Constants.DECL.SENSOR));
 
         bleService = new Intent(HomeAct.this, BLESensor.class);
     }
@@ -138,13 +141,13 @@ public class HomeAct extends AppCompatActivity {
         if (dObj.get(1) == null) {
             dObj.set(1, "0");
         }
-        weeklytext.setText(dObj.get(0) + "/" + sharedpreferences.getString(OBJ_WEEK, "500"));
-        monthlytext.setText(dObj.get(1) + "/" + sharedpreferences.getString(OBJ_MONTH, "2000"));
-        weeklyprogress.setProgress((Float.parseFloat(dObj.get(0)) / Float.parseFloat(sharedpreferences.getString(OBJ_WEEK, "500"))) * 100);
-        monthlyprogress.setProgress((Float.parseFloat(dObj.get(1)) / Float.parseFloat(sharedpreferences.getString(OBJ_MONTH, "2000"))) * 100);
+        weeklytext.setText(dObj.get(0) + "/" + sharedpreferences.getString(Constants.DECL.OBJ_WEEK, "500"));
+        monthlytext.setText(dObj.get(1) + "/" + sharedpreferences.getString(Constants.DECL.OBJ_MONTH, "2000"));
+        weeklyprogress.setProgress((Float.parseFloat(dObj.get(0)) / Float.parseFloat(sharedpreferences.getString(Constants.DECL.OBJ_WEEK, "500"))) * 100);
+        monthlyprogress.setProgress((Float.parseFloat(dObj.get(1)) / Float.parseFloat(sharedpreferences.getString(Constants.DECL.OBJ_MONTH, "2000"))) * 100);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(sensorListener,
-                new IntentFilter(SENSOR));
+                new IntentFilter(Constants.DECL.SENSOR));
     }
 
     @Override
@@ -160,19 +163,23 @@ public class HomeAct extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.launch_service:
                 // Make an intent to start Service
-                if (bluetoothOn == false) {
+                if (!bluetoothOn) {
                     BLEEnable();
                     item.setIcon(R.drawable.ic_bluetoothwait);
                     if (isMyServiceRunning(BLESensor.class)) {
                         Log.i("Home", "Stop services isMyServiceRunning");
+                        bleService.setAction(Constants.SERVICE.STOPFOREGROUND_ACTION);
                         stopService(bleService);
                     }
                     Log.i("Home", "Start services");
+                    bleService.setAction(Constants.SERVICE.STARTFOREGROUND_ACTION);
+                    startForegroundService(bleService);
                     startService(bleService);
                     bluetoothOn = true;
                 } else {
                     item.setIcon(R.drawable.ic_bluetoothoff);
                     Log.i("Home", "Stop services");
+                    bleService.setAction(Constants.SERVICE.STOPFOREGROUND_ACTION);
                     stopService(bleService);
                     bluetoothOn = false;
                 }
@@ -221,12 +228,12 @@ public class HomeAct extends AppCompatActivity {
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            startActivityForResult(enableBtIntent, Constants.BLE.REQUEST_ENABLE_BT);
         }
     }
 
     private ArrayList<String> splitMessage(String msg) {
-        StringTokenizer strTkn = new StringTokenizer(msg, DELIMITERS);
+        StringTokenizer strTkn = new StringTokenizer(msg, Constants.DECL.DELIMITERS);
         ArrayList<String> arrLis = new ArrayList<>(msg.length());
 
         while (strTkn.hasMoreTokens())

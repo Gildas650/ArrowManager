@@ -24,8 +24,7 @@ public class touchableImageView extends android.support.v7.widget.AppCompatImage
 
     List<Impact> points = new ArrayList<>();
     Paint paint = new Paint();
-    int offsetC = 150;
-    int pointSize = 15;
+
     Context context;
     boolean allowedToDraw = true;
 
@@ -41,7 +40,7 @@ public class touchableImageView extends android.support.v7.widget.AppCompatImage
         int myColor = context.getResources().getColor(R.color.point);
         paint.setColor(myColor);
         for (Impact point : points) {
-            canvas.drawCircle(point.getX(), point.getY() - offsetC, pointSize, paint);
+            canvas.drawCircle(point.getX(), point.getY() - Constants.IMPACT.OFFSETC, Constants.IMPACT.POINTSIZE, paint);
         }
     }
 

@@ -16,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 import fr.arrowm.arrowm.Activities.RoundAct;
+import fr.arrowm.arrowm.Business.Constants;
 import fr.arrowm.arrowm.Business.Session;
 import fr.arrowm.arrowm.Db.ArrowDataBase;
 import fr.arrowm.arrowm.R;
@@ -27,7 +28,6 @@ import fr.arrowm.arrowm.R;
 
 public class SessionAdapter extends ArrayAdapter<Session> {
 
-    private final static String SESSION = "com.arrowM.SESSION";
     private DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
     private ArrowDataBase db;
     private boolean sureTodelete = false;
@@ -105,7 +105,7 @@ public class SessionAdapter extends ArrayAdapter<Session> {
             public void onClick(View v) {
                 if (list.get(position).isExistRound()) {
                     Intent i = new Intent(parent.getContext(), RoundAct.class);
-                    i.putExtra(SESSION, list.get(position));
+                    i.putExtra(Constants.DECL.SESSION, list.get(position));
                     parent.getContext().startActivity(i);
                 }
             }

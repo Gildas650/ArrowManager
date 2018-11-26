@@ -44,6 +44,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
 
+import fr.arrowm.arrowm.Business.Constants;
 import fr.arrowm.arrowm.Business.Event;
 import fr.arrowm.arrowm.Business.Session;
 import fr.arrowm.arrowm.Db.ArrowDataBase;
@@ -51,20 +52,7 @@ import fr.arrowm.arrowm.R;
 
 public class SessionAct extends AppCompatActivity {
 
-    public static final String PREFERENCES = "ArrowPrefs";
-    public static final String BOW_TYPE = "bowType";
-    public static final String OBJ_SCE = "objSce";
-    public static final String TOL_TIMING = "tolTiming";
-    public final static String SESSION = "com.arrowM.SESSION";
-    public static final String SENSOR = "sensor";
-    public static final String SENSOR_DATA = "sensorData";
-    public static final String DELIMITERS = ";";
-    public final static String IS_BLUETOOTHON = "com.arrowM.MESSAGE2";
-    public final static Integer WAITING_PERIOD = 10;
-    public final static Float LOWBAT = 3.4F;
-    private static final int STATE_DISCONNECTED = 0;
-    private static final int STATE_CONNECTING = 1;
-    private static final int STATE_CONNECTED = 2;
+
     public static String PACKAGE_NAME;
     private Session session;
     private TextView timer;
@@ -114,7 +102,7 @@ public class SessionAct extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             ArrayList<String> msg = new ArrayList<>();
-            msg = splitMessage(intent.getStringExtra(SENSOR_DATA));
+            msg = splitMessage(intent.getStringExtra(Constants.DECL.SENSOR_DATA));
             if (msg.size() == 5) {
                 //State
                 setBLEIcon(Integer.parseInt(msg.get(0)));
@@ -147,7 +135,7 @@ public class SessionAct extends AppCompatActivity {
                 }
                 //Power
                 if (Float.parseFloat(msg.get(3)) != -1) {
-                    if (Float.parseFloat(msg.get(3)) < LOWBAT) {
+                    if (Float.parseFloat(msg.get(3)) < Constants.BLE.LOWBAT) {
                         blelowbat.setVisibility(View.VISIBLE);
                     }
                 }
@@ -166,7 +154,7 @@ public class SessionAct extends AppCompatActivity {
                 updateSession(session,true);
 
             } else {
-                Toast.makeText(getApplicationContext(), R.string.error_data + intent.getStringExtra(SENSOR_DATA), Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), R.string.error_data + intent.getStringExtra(Constants.DECL.SENSOR_DATA), Toast.LENGTH_LONG).show();
             }
         }
     };
@@ -182,15 +170,15 @@ public class SessionAct extends AppCompatActivity {
         this.initializeScreen();
 
         final Intent intent = getIntent();
-        if (intent.getSerializableExtra(SESSION) != null) {
-            session = (Session) intent.getSerializableExtra(SESSION);
+        if (intent.getSerializableExtra(Constants.DECL.SESSION) != null) {
+            session = (Session) intent.getSerializableExtra(Constants.DECL.SESSION);
         }
         else if (getLastSession() != null){
                 alertDialog.show();
         }
 
-        if (intent.getSerializableExtra(IS_BLUETOOTHON) != null) {
-            session.setBLEState((Integer) intent.getSerializableExtra(IS_BLUETOOTHON));
+        if (intent.getSerializableExtra(Constants.DECL.IS_BLUETOOTHON) != null) {
+            session.setBLEState((Integer) intent.getSerializableExtra(Constants.DECL.IS_BLUETOOTHON));
         }
 
         setBLEIcon(session.getBLEState());
@@ -251,7 +239,7 @@ public class SessionAct extends AppCompatActivity {
                     session.setRound(roundList.get(i));
                 }
                 Intent i = new Intent(SessionAct.this, RoundAct.class);
-                i.putExtra(SESSION, session);
+                i.putExtra(Constants.DECL.SESSION, session);
                 startActivityForResult(i, 0);
                 runTask = false;
                 finish();
@@ -276,7 +264,7 @@ public class SessionAct extends AppCompatActivity {
                     if (!isProgressRunning) {
                         bchrono.setImageResource(R.drawable.ret);
                         timerD = new Date();
-                        timerD.setTime(timerD.getTime() + (iniTime * 1000) + (WAITING_PERIOD * 1000));
+                        timerD.setTime(timerD.getTime() + (iniTime * 1000) + (Constants.DECL.WAITING_PERIOD * 1000));
                         progressChrono.getProgressDrawable().setColorFilter(ResourcesCompat.getColor(getResources(), R.color.pred, null), PorterDuff.Mode.SRC_IN);
                         progressChrono.setProgress(0);
                         isProgressRunning = true;
@@ -332,7 +320,7 @@ public class SessionAct extends AppCompatActivity {
         initializeTime();
 
         localBroadcastManager.registerReceiver(sensorListener,
-                new IntentFilter(SENSOR));
+                new IntentFilter(Constants.DECL.SENSOR));
     }
 
     @Override
@@ -372,13 +360,13 @@ public class SessionAct extends AppCompatActivity {
 
         df = new DecimalFormat("##0.00");
 
-        SharedPreferences sharedpreferences = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences sharedpreferences = getSharedPreferences(Constants.DECL.PREFERENCES, Context.MODE_PRIVATE);
         for (int i = 0; i < Event.values().length; i++) {
-            if (Event.values()[i].getRc().equals(sharedpreferences.getString(BOW_TYPE, ""))) {
+            if (Event.values()[i].getRc().equals(sharedpreferences.getString(Constants.DECL.BOW_TYPE, ""))) {
                 this.roundList.add(Event.values()[i]);
             }
         }
-        tolerance = Float.parseFloat(sharedpreferences.getString(TOL_TIMING, "1"));
+        tolerance = Float.parseFloat(sharedpreferences.getString(Constants.DECL.TOL_TIMING, "1"));
 
         seekBar = (SeekBar) findViewById(R.id.seekBar);
         nbOfArrows = (TextView) findViewById(R.id.nbOfArrows);
@@ -388,7 +376,7 @@ public class SessionAct extends AppCompatActivity {
         sureToClose = (Switch) findViewById(R.id.sureToClose);
         closeSession = (Button) findViewById(R.id.closeSession);
         progress = (ProgressBar) findViewById(R.id.progress);
-        progress.setMax(Integer.parseInt(sharedpreferences.getString(OBJ_SCE, "100")));
+        progress.setMax(Integer.parseInt(sharedpreferences.getString(Constants.DECL.OBJ_SCE, "100")));
         rounds = (Spinner) findViewById(R.id.round);
         chronos = (Spinner) findViewById(R.id.chronoSelect);
         bchrono = (ImageButton) findViewById(R.id.bchrono);
@@ -431,6 +419,7 @@ public class SessionAct extends AppCompatActivity {
                         db.open();
                         session = db.selectTmp();
                         db.close();
+                        renderGraph();
                     }
                 });
         alertDialog.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
@@ -636,9 +625,9 @@ public class SessionAct extends AppCompatActivity {
     }
 
     private void setBLEIcon(int state) {
-        if (state == STATE_CONNECTED) {
+        if (state == Constants.BLE.STATE_CONNECTED) {
             bluestate.setImageResource(R.drawable.ic_bluetooth);
-        } else if (state == STATE_CONNECTING) {
+        } else if (state == Constants.BLE.STATE_CONNECTING) {
             bluestate.setImageResource(R.drawable.ic_bluetoothwait);
         } else {
             bluestate.setImageResource(R.drawable.ic_bluetoothoff);
@@ -666,7 +655,7 @@ public class SessionAct extends AppCompatActivity {
             while (runTask) {
                 if (isProgressRunning) {
                     if (!runningflag) {
-                        step = WAITING_PERIOD * 10;
+                        step = Constants.DECL.WAITING_PERIOD * 10;
                         runningflag = true;
                     }
                     step = step - 1;
@@ -728,7 +717,7 @@ public class SessionAct extends AppCompatActivity {
 
     }
     private ArrayList<String> splitMessage(String msg) {
-        StringTokenizer strTkn = new StringTokenizer(msg, DELIMITERS);
+        StringTokenizer strTkn = new StringTokenizer(msg, Constants.DECL.DELIMITERS);
         ArrayList<String> arrLis = new ArrayList<>(msg.length());
 
         while (strTkn.hasMoreTokens())

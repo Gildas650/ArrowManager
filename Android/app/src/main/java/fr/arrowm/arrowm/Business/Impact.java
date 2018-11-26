@@ -11,8 +11,7 @@ import java.io.Serializable;
  */
 
 public class Impact implements Serializable {
-    private final static int offsetC = 150;
-    private final static int pointSize = 15;
+
     private float x;
     private float y;
 
@@ -38,8 +37,8 @@ public class Impact implements Serializable {
     }
 
     public Double getDistance(float centerX, float centerY) {
-        Double ret = Math.sqrt(Math.pow(Math.abs(centerX - x), 2) + Math.pow(Math.abs(centerY - (y - offsetC)), 2));
-        ret = ret - (pointSize * 2);
+        Double ret = Math.sqrt(Math.pow(Math.abs(centerX - x), 2) + Math.pow(Math.abs(centerY - (y - Constants.IMPACT.OFFSETC)), 2));
+        ret = ret - (Constants.IMPACT.POINTSIZE * 2);
         return ret;
     }
 }

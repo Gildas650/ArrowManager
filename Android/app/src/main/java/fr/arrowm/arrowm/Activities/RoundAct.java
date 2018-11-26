@@ -26,6 +26,8 @@ import android.widget.Toast;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
+
+import fr.arrowm.arrowm.Business.Constants;
 import fr.arrowm.arrowm.Business.Impact;
 import fr.arrowm.arrowm.Business.Score;
 import fr.arrowm.arrowm.Business.Session;
@@ -35,16 +37,7 @@ import fr.arrowm.arrowm.R;
 
 public class RoundAct extends AppCompatActivity {
 
-    public final static String SESSION = "com.arrowM.SESSION";
-    public final static String TRI_SPOT = "FITA Tri-Spot";
-    public final static String SPOT = "FITA Mono-Spot";
-    public final static String STANDARD = "FITA";
-    public static final String SENSOR = "sensor";
-    public static final String SENSOR_DATA = "sensorData";
-    public static final String DELIMITERS = ";";
-    private static final int STATE_DISCONNECTED = 0;
-    private static final int STATE_CONNECTING = 1;
-    private static final int STATE_CONNECTED = 2;
+
     public static String PACKAGE_NAME;
     private Session session;
     private touchableImageView face;
@@ -85,15 +78,15 @@ public class RoundAct extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             ArrayList<String> msg = new ArrayList<>();
-            msg = splitMessage(intent.getStringExtra(SENSOR_DATA));
-            if (Integer.parseInt(msg.get(0)) == STATE_CONNECTED) {
-                session.setBLEState(STATE_CONNECTED);
+            msg = splitMessage(intent.getStringExtra(Constants.DECL.SENSOR_DATA));
+            if (Integer.parseInt(msg.get(0)) == Constants.BLE.STATE_CONNECTED) {
+                session.setBLEState(Constants.BLE.STATE_CONNECTED);
                 useBLE = true;
-            } else if (Integer.parseInt(msg.get(0)) == STATE_CONNECTING) {
-                session.setBLEState(STATE_CONNECTING);
+            } else if (Integer.parseInt(msg.get(0)) == Constants.BLE.STATE_CONNECTING) {
+                session.setBLEState(Constants.BLE.STATE_CONNECTING);
                 useBLE = true;
             } else {
-                session.setBLEState(STATE_DISCONNECTED);
+                session.setBLEState(Constants.BLE.STATE_DISCONNECTED);
             }
             if (Integer.parseInt(msg.get(1)) != -1) {
                 addCountfromBLE(Integer.parseInt(msg.get(1)), lastBLECount);
@@ -126,7 +119,7 @@ public class RoundAct extends AppCompatActivity {
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
         initializeScreen();
 
-        if (session.getBLEState() == STATE_DISCONNECTED) {
+        if (session.getBLEState() == Constants.BLE.STATE_DISCONNECTED) {
             useBLE = false;
         } else {
             useBLE = true;
@@ -137,7 +130,7 @@ public class RoundAct extends AppCompatActivity {
                 localBroadcastManager.unregisterReceiver(sensorListener);
                 face.setAllowedToDraw(true);
                 Intent i = new Intent(RoundAct.this, SessionAct.class);
-                i.putExtra(SESSION, session);
+                i.putExtra(Constants.DECL.SESSION, session);
                 startActivityForResult(i, 0);
                 finish();
             }
@@ -220,7 +213,7 @@ public class RoundAct extends AppCompatActivity {
         PACKAGE_NAME = getApplicationContext().getPackageName();
 
         localBroadcastManager.registerReceiver(sensorListener,
-                new IntentFilter(SENSOR));
+                new IntentFilter(Constants.DECL.SENSOR));
     }
 
     @Override
@@ -229,7 +222,7 @@ public class RoundAct extends AppCompatActivity {
         if (session.getEndOfSession() == null) {
             face.setAllowedToDraw(true);
             Intent i = new Intent(RoundAct.this, SessionAct.class);
-            i.putExtra(SESSION, session);
+            i.putExtra(Constants.DECL.SESSION, session);
             startActivityForResult(i, 0);
         }
         finish();
@@ -238,19 +231,19 @@ public class RoundAct extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (session.getRound().getEvent().getSpot().equals(TRI_SPOT)) {
+        if (session.getRound().getEvent().getSpot().equals(Constants.TARGET.TRI_SPOT)) {
             circleNumber = Score.values()[0].getTriSpotList().size() - 1;
-            faceType = TRI_SPOT;
+            faceType = Constants.TARGET.TRI_SPOT;
             face.setImageResource(R.drawable.ictarget);
             scoreToUse = Score.values()[0].getTriSpotList();
-        } else if (session.getRound().getEvent().getSpot().equals(SPOT)) {
+        } else if (session.getRound().getEvent().getSpot().equals(Constants.TARGET.SPOT)) {
             circleNumber = Score.values()[0].getSpotList().size() - 1;
-            faceType = SPOT;
+            faceType = Constants.TARGET.SPOT;
             face.setImageResource(R.drawable.octarget);
             scoreToUse = Score.values()[0].getSpotList();
         } else {
             circleNumber = Score.values()[0].getStandardList().size() - 1;
-            faceType = STANDARD;
+            faceType = Constants.TARGET.STANDARD;
             face.setImageResource(R.drawable.starget);
             scoreToUse = Score.values()[0].getStandardList();
         }
@@ -383,7 +376,7 @@ public class RoundAct extends AppCompatActivity {
 
     private void initializeScreen() {
         final Intent intent = getIntent();
-        session = (Session) intent.getSerializableExtra(SESSION);
+        session = (Session) intent.getSerializableExtra(Constants.DECL.SESSION);
 
         ret = (Button) findViewById(R.id.returnc);
         cancelA = (ImageButton) findViewById(R.id.cancelA);
@@ -467,7 +460,7 @@ public class RoundAct extends AppCompatActivity {
     }
 
     private ArrayList<String> splitMessage(String msg) {
-        StringTokenizer strTkn = new StringTokenizer(msg, DELIMITERS);
+        StringTokenizer strTkn = new StringTokenizer(msg, Constants.DECL.DELIMITERS);
         ArrayList<String> arrLis = new ArrayList<>(msg.length());
 
         while (strTkn.hasMoreTokens())

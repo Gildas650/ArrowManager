@@ -1,5 +1,9 @@
 package fr.arrowm.arrowm.Service;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -13,10 +17,14 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -25,41 +33,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import fr.arrowm.arrowm.Activities.HomeAct;
+import fr.arrowm.arrowm.Business.Constants;
+import fr.arrowm.arrowm.R;
+
 public class BLESensor extends Service {
-    public static final String PREFERENCES = "ArrowPrefs";
-    public static final String SENSOR_NAME = "sensorName";
-    public static final String SENSOR = "sensor";
-    public static final String SENSOR_DATA = "sensorData";
-    public static final String DELIMITERS = ";";
-    public static final String SerialPortUUID = "0000dfb1-0000-1000-8000-00805f9b34fb";
-    public static final String CommandUUID = "0000dfb2-0000-1000-8000-00805f9b34fb";
-    public static final String ModelNumberStringUUID = "00002a24-0000-1000-8000-00805f9b34fb";
-    public final static String ACTION_GATT_CONNECTED =
-            "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
-    public final static String ACTION_GATT_DISCONNECTED =
-            "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED";
-    public final static String ACTION_GATT_SERVICES_DISCOVERED =
-            "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
-    public final static String ACTION_DATA_AVAILABLE =
-            "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
-    public final static String EXTRA_DATA =
-            "com.example.bluetooth.le.EXTRA_DATA";
-    private static final int STATE_DISCONNECTED = 0;
-    private static final int STATE_CONNECTING = 1;
-    private static final int STATE_CONNECTED = 2;
-    //To tell the onCharacteristicWrite call back function that this is a new characteristic,
-    //not the Write Characteristic to the device successfully.
-    private static final int WRITE_NEW_CHARACTERISTIC = -1;
-    //define the limited length of the characteristic.
-    private static final int MAX_CHARACTERISTIC_LENGTH = 17;
+
+    public int mConnectionState = Constants.BLE.STATE_DISCONNECTED;
     private final static String TAG = BLESensor.class.getSimpleName();
+    BluetoothGatt mBluetoothGatt;
     private static BluetoothGattCharacteristic mSCharacteristic, mModelNumberCharacteristic, mSerialPortCharacteristic, mCommandCharacteristic;
     public String mBluetoothDeviceAddress = "";
-    public int mConnectionState = STATE_DISCONNECTED;
-    BluetoothGatt mBluetoothGatt;
-    private int mBaudrate = 115200;
-    private String mPassword = "AT+PASSWOR=DFRobot\r\n";
-    private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\r\n";
     private boolean stop = false;
     //Show that Characteristic is writing or not.
     private boolean mIsWritingCharacteristic = false;
@@ -69,14 +53,16 @@ public class BLESensor extends Service {
             new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     private SharedPreferences sharedpreferences;
     private RingBuffer<BluetoothGattCharacteristicHelper> mCharacteristicRingBuffer = new RingBuffer<BluetoothGattCharacteristicHelper>(8);
+    private PendingIntent pendingIntent;
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             Log.i(TAG, "New State" + newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.i(TAG, "New State : Connected");
-                mConnectionState = STATE_CONNECTED;
-                sendState(STATE_CONNECTED,"");
+                mConnectionState = Constants.BLE.STATE_CONNECTED;
+                sendState(Constants.BLE.STATE_CONNECTED,"");
+
                 Log.i(TAG, "Connected to GATT server.");
                 // Attempts to discover services after successful connection.
                 if (mBluetoothGatt.discoverServices()) {
@@ -91,19 +77,19 @@ public class BLESensor extends Service {
             //} else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
             } else {
                 Log.i(TAG, "New State : Disconnected");
-                mConnectionState = STATE_DISCONNECTED;
+                mConnectionState = Constants.BLE.STATE_DISCONNECTED;
                 if (!stop) {
                     Log.e(TAG, "Disconnected from GATT server.");
-                    sendState(STATE_CONNECTING,"error_reconnect_BLE");
-                    disconnect();
-                    close();
-                    Handler handler = new Handler(Looper.getMainLooper());
+                    sendState(Constants.BLE.STATE_CONNECTING,"error_reconnect_BLE");
+                    //disconnect();
+                    //close();
+                    /*Handler handler = new Handler(Looper.getMainLooper());
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
                             connect(mBluetoothDeviceAddress);
                         }
-                    }, 5000);
+                    }, 5000);*/
                 }
 
             }
@@ -130,13 +116,13 @@ public class BLESensor extends Service {
                 for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
                     charas.add(gattCharacteristic);
                     uuid = gattCharacteristic.getUuid().toString();
-                    if (uuid.equals(ModelNumberStringUUID)) {
+                    if (uuid.equals(Constants.BLE.ModelNumberStringUUID)) {
                         mModelNumberCharacteristic = gattCharacteristic;
                         Log.i(TAG, "mModelNumberCharacteristic  " + mModelNumberCharacteristic.getUuid().toString());
-                    } else if (uuid.equals(SerialPortUUID)) {
+                    } else if (uuid.equals(Constants.BLE.SerialPortUUID)) {
                         mSerialPortCharacteristic = gattCharacteristic;
                         Log.i(TAG, "mSerialPortCharacteristic  " + mSerialPortCharacteristic.getUuid().toString());
-                    } else if (uuid.equals(CommandUUID)) {
+                    } else if (uuid.equals(Constants.BLE.CommandUUID)) {
                         mCommandCharacteristic = gattCharacteristic;
                         Log.i(TAG, "mSerialPortCharacteristic  " + mSerialPortCharacteristic.getUuid().toString());
                     }
@@ -145,7 +131,7 @@ public class BLESensor extends Service {
             }
 
             if (mModelNumberCharacteristic == null || mSerialPortCharacteristic == null || mCommandCharacteristic == null) {
-                sendState(STATE_DISCONNECTED,"error_not_found_BLE");
+                sendState(Constants.BLE.STATE_DISCONNECTED,"error_not_found_BLE");
             } else {
                 mSCharacteristic = mModelNumberCharacteristic;
                 setCharacteristicNotification(mSCharacteristic, true);
@@ -175,9 +161,9 @@ public class BLESensor extends Service {
                         mIsWritingCharacteristic = false;
                     } else {
                         BluetoothGattCharacteristicHelper bluetoothGattCharacteristicHelper = mCharacteristicRingBuffer.next();
-                        if (bluetoothGattCharacteristicHelper.mCharacteristicValue.length() > MAX_CHARACTERISTIC_LENGTH) {
+                        if (bluetoothGattCharacteristicHelper.mCharacteristicValue.length() > Constants.BLE.MAX_CHARACTERISTIC_LENGTH) {
                             try {
-                                bluetoothGattCharacteristicHelper.mCharacteristic.setValue(bluetoothGattCharacteristicHelper.mCharacteristicValue.substring(0, MAX_CHARACTERISTIC_LENGTH).getBytes("ISO-8859-1"));
+                                bluetoothGattCharacteristicHelper.mCharacteristic.setValue(bluetoothGattCharacteristicHelper.mCharacteristicValue.substring(0, Constants.BLE.MAX_CHARACTERISTIC_LENGTH).getBytes("ISO-8859-1"));
 
                             } catch (UnsupportedEncodingException e) {
                                 // this should never happen because "US-ASCII" is hard-coded.
@@ -190,7 +176,7 @@ public class BLESensor extends Service {
                             } else {
                                 Log.i(TAG, "writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":failure");
                             }
-                            bluetoothGattCharacteristicHelper.mCharacteristicValue = bluetoothGattCharacteristicHelper.mCharacteristicValue.substring(MAX_CHARACTERISTIC_LENGTH);
+                            bluetoothGattCharacteristicHelper.mCharacteristicValue = bluetoothGattCharacteristicHelper.mCharacteristicValue.substring(Constants.BLE.MAX_CHARACTERISTIC_LENGTH);
                         } else {
                             try {
                                 bluetoothGattCharacteristicHelper.mCharacteristic.setValue(bluetoothGattCharacteristicHelper.mCharacteristicValue.getBytes("ISO-8859-1"));
@@ -215,13 +201,13 @@ public class BLESensor extends Service {
                     }
                 }
                 //WRITE a NEW CHARACTERISTIC
-                else if (status == WRITE_NEW_CHARACTERISTIC) {
+                else if (status == Constants.BLE.WRITE_NEW_CHARACTERISTIC) {
                     if ((!mCharacteristicRingBuffer.isEmpty()) && mIsWritingCharacteristic == false) {
                         BluetoothGattCharacteristicHelper bluetoothGattCharacteristicHelper = mCharacteristicRingBuffer.next();
-                        if (bluetoothGattCharacteristicHelper.mCharacteristicValue.length() > MAX_CHARACTERISTIC_LENGTH) {
+                        if (bluetoothGattCharacteristicHelper.mCharacteristicValue.length() > Constants.BLE.MAX_CHARACTERISTIC_LENGTH) {
 
                             try {
-                                bluetoothGattCharacteristicHelper.mCharacteristic.setValue(bluetoothGattCharacteristicHelper.mCharacteristicValue.substring(0, MAX_CHARACTERISTIC_LENGTH).getBytes("ISO-8859-1"));
+                                bluetoothGattCharacteristicHelper.mCharacteristic.setValue(bluetoothGattCharacteristicHelper.mCharacteristicValue.substring(0, Constants.BLE.MAX_CHARACTERISTIC_LENGTH).getBytes("ISO-8859-1"));
                             } catch (UnsupportedEncodingException e) {
                                 // this should never happen because "US-ASCII" is hard-coded.
                                 throw new IllegalStateException(e);
@@ -232,7 +218,7 @@ public class BLESensor extends Service {
                             } else {
                                 Log.i(TAG, "writeCharacteristic init " + new String(bluetoothGattCharacteristicHelper.mCharacteristic.getValue()) + ":failure");
                             }
-                            bluetoothGattCharacteristicHelper.mCharacteristicValue = bluetoothGattCharacteristicHelper.mCharacteristicValue.substring(MAX_CHARACTERISTIC_LENGTH);
+                            bluetoothGattCharacteristicHelper.mCharacteristicValue = bluetoothGattCharacteristicHelper.mCharacteristicValue.substring(Constants.BLE.MAX_CHARACTERISTIC_LENGTH);
                         } else {
                             try {
                                 bluetoothGattCharacteristicHelper.mCharacteristic.setValue(bluetoothGattCharacteristicHelper.mCharacteristicValue.getBytes("ISO-8859-1"));
@@ -311,17 +297,49 @@ public class BLESensor extends Service {
 
     @Override
     public void onCreate() {
-        sharedpreferences = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
+        sharedpreferences = getSharedPreferences(Constants.DECL.PREFERENCES, Context.MODE_PRIVATE);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationChannel nc = new NotificationChannel(Constants.BLE.ARROW_CHANNEL,Constants.BLE.ARROW_CHANNEL, NotificationManager.IMPORTANCE_MIN);
+        notificationManager.createNotificationChannel(nc);
 
-        if (initialize()) {
-            connect(mBluetoothDeviceAddress);
+        Intent notificationIntent = new Intent(this, HomeAct.class);
+        notificationIntent.setAction(Constants.BLE.MAIN_ACTION);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        pendingIntent = PendingIntent.getActivity(this, 0,
+                notificationIntent, 0);
+        super.onCreate();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i(TAG, "Received Start Foreground Intent ");
+        if (intent.getAction().equals(Constants.BLE.STARTFOREGROUND_ACTION)) {
+
+            Notification notification  = new NotificationCompat.Builder(this, Constants.BLE.ARROW_CHANNEL)
+                    .setContentTitle(getResources().getString(R.string.app_name))
+                    .setContentText(getResources().getString(R.string.connected))
+                    .setSmallIcon(R.drawable.ic_bluetooth_notif)
+                    .setContentIntent(pendingIntent)
+                    .setAutoCancel(true)
+                    .setOngoing(true).build();
+            startForeground(Constants.BLE.FOREGROUND_SERVICE, notification);
+
+            if (initialize()) {
+                connect(mBluetoothDeviceAddress);
+            }
+        } else if (intent.getAction().equals(Constants.BLE.STOPFOREGROUND_ACTION)) {
+            Log.i(TAG, "Received Stop Foreground Intent");
+            stopForeground(true);
+            stopSelf();
         }
 
+        return START_STICKY;
     }
 
     public boolean initialize() {
-        SharedPreferences sharedpreferences = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
-        mBluetoothDeviceAddress = sharedpreferences.getString(SENSOR_NAME, "");
+        SharedPreferences sharedpreferences = getSharedPreferences(Constants.DECL.PREFERENCES, Context.MODE_PRIVATE);
+        mBluetoothDeviceAddress = sharedpreferences.getString(Constants.DECL.SENSOR_NAME, "");
 
         if (mBluetoothDeviceAddress.equals("")) {
             Log.e(TAG, "Address not set in Sensor act");
@@ -334,14 +352,14 @@ public class BLESensor extends Service {
             if (mBluetoothManager == null) {
                 mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
                 if (mBluetoothManager == null) {
-                    sendState(STATE_DISCONNECTED,"error_init_BLE");
+                    sendState(Constants.BLE.STATE_DISCONNECTED,"error_init_BLE");
                     return false;
                 }
             }
 
             mBluetoothAdapter = mBluetoothManager.getAdapter();
             if (mBluetoothAdapter == null) {
-                sendState(STATE_DISCONNECTED,"error_init_BLE");
+                sendState(Constants.BLE.STATE_DISCONNECTED,"error_init_BLE");
                 return false;
             }
 
@@ -353,26 +371,26 @@ public class BLESensor extends Service {
         Log.i(TAG, "BluetoothLeService connect" + address + mBluetoothGatt);
         if (mBluetoothAdapter == null || address == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
-            sendState(STATE_DISCONNECTED,"error_init_BLE");
+            sendState(Constants.BLE.STATE_DISCONNECTED,"error_init_BLE");
             return false;
         }
 
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
             Log.w(TAG, "Device not found.  Unable to connect.");
-            sendState(STATE_DISCONNECTED,"error_not_found_BLE");
+            sendState(Constants.BLE.STATE_DISCONNECTED,"error_not_found_BLE");
             return false;
         }
         // We want to directly connect to the device, so we are setting the autoConnect
         // parameter to false.
         Log.i(TAG, "device.connectGatt connect");
         synchronized (this) {
-            mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
-            //mBluetoothGatt = device.connectGatt(this, true, mGattCallback);
+            //mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
+            mBluetoothGatt = device.connectGatt(this, true, mGattCallback);
         }
         Log.d(TAG, "Trying to create a new connection.");
         mBluetoothDeviceAddress = address;
-        mConnectionState = STATE_CONNECTING;
+        mConnectionState = Constants.BLE.STATE_CONNECTING;
         return true;
     }
 
@@ -386,19 +404,19 @@ public class BLESensor extends Service {
                 if (new String(data).toUpperCase().startsWith("DF BLUNO")) {
                     setCharacteristicNotification(mSCharacteristic, false);
                     mSCharacteristic = mCommandCharacteristic;
-                    mSCharacteristic.setValue(mPassword);
+                    mSCharacteristic.setValue(Constants.BLE.mPassword);
                     writeCharacteristic(mSCharacteristic);
-                    mSCharacteristic.setValue(mBaudrateBuffer);
+                    mSCharacteristic.setValue(Constants.BLE.mBaudrateBuffer);
                     writeCharacteristic(mSCharacteristic);
                     mSCharacteristic = mSerialPortCharacteristic;
                     setCharacteristicNotification(mSCharacteristic, true);
-                    mConnectionState = STATE_CONNECTED;
-                    sendState(STATE_CONNECTED,"");
+                    mConnectionState = Constants.BLE.STATE_CONNECTED;
+                    sendState(Constants.BLE.STATE_CONNECTED,"");
                     //
 
                 } else {
-                    mConnectionState = STATE_CONNECTING;
-                    sendState(STATE_DISCONNECTED,"");
+                    mConnectionState = Constants.BLE.STATE_CONNECTING;
+                    sendState(Constants.BLE.STATE_DISCONNECTED,"");
                 }
             } else if (mSCharacteristic == mSerialPortCharacteristic) {
                 sendCount(new String(data));
@@ -416,8 +434,8 @@ public class BLESensor extends Service {
 
 
     private void sendCount(String data) {
-        Intent intent = new Intent(SENSOR);
-        intent.putExtra(SENSOR_DATA, STATE_CONNECTED + ";" + data + "; ;");
+        Intent intent = new Intent(Constants.DECL.SENSOR);
+        intent.putExtra(Constants.DECL.SENSOR_DATA, Constants.BLE.STATE_CONNECTED + ";" + data + "; ;");
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
@@ -429,8 +447,8 @@ public class BLESensor extends Service {
         else{
             sent = s + ";" + -1 + ";" + -1 + ";" + -1.0F + ";" + msg + ";";
         }
-        Intent intent = new Intent(SENSOR);
-        intent.putExtra(SENSOR_DATA, sent);
+        Intent intent = new Intent(Constants.DECL.SENSOR);
+        intent.putExtra(Constants.DECL.SENSOR_DATA, sent);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
@@ -438,7 +456,7 @@ public class BLESensor extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        sendState(STATE_DISCONNECTED,"");
+        sendState(Constants.BLE.STATE_DISCONNECTED,"");
         stop = true;
         disconnect();
         close();
@@ -518,7 +536,7 @@ public class BLESensor extends Service {
 
         //The progress of onCharacteristicWrite and writeCharacteristic is almost the same. So callback function is called directly here
         //for details see the onCharacteristicWrite function
-        mGattCallback.onCharacteristicWrite(mBluetoothGatt, characteristic, WRITE_NEW_CHARACTERISTIC);
+        mGattCallback.onCharacteristicWrite(mBluetoothGatt, characteristic, Constants.BLE.WRITE_NEW_CHARACTERISTIC);
 
     }
 
@@ -571,4 +589,5 @@ public class BLESensor extends Service {
             mCharacteristicValue = characteristicValue;
         }
     }
+
 }

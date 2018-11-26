@@ -40,5 +40,6 @@
     <string name="dialog_texte">Voulez vous reprendre la dernière session ?</string>
     <string name="dialog_title2">Supprimer Session</string>
     <string name="dialog_texte2">Voulez vous vraiement supprimer la dernière session ?</string>
+    <string name="connected">Connexion au capteur active</string>
 
 </resources>
